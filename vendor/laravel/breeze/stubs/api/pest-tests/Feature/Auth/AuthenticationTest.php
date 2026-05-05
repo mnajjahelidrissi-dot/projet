@@ -1,9 +1,14 @@
 <?php
 
-use App\Models\User;
+use App\Models\Utilisateur;
+use Illuminate\Support\Facades\Hash;
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+test('les utilisateurs peuvent s\'authentifier via l\'écran de connexion', function () {
+    // Correction : Utilisation du modèle Utilisateur avec un mot de passe connu
+    $user = Utilisateur::factory()->create([
+        'password' => Hash::make('password'),
+        'actif' => true,
+    ]);
 
     $response = $this->post('/login', [
         'email' => $user->email,
@@ -11,25 +16,33 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertNoContent();
+
+    // Correction : Vos contrôleurs redirigent vers 'tableau-de-bord' après login
+    $response->assertRedirect(route('tableau-de-bord'));
 });
 
-test('users can not authenticate with invalid password', function () {
-    $user = User::factory()->create();
+test('les utilisateurs ne peuvent pas s\'authentifier avec un mauvais mot de passe', function () {
+    $user = Utilisateur::factory()->create([
+        'password' => Hash::make('password'),
+    ]);
 
-    $this->post('/login', [
+    $response = $this->post('/login', [
         'email' => $user->email,
         'password' => 'wrong-password',
     ]);
 
     $this->assertGuest();
+
+    // Correction : AuthController utilise back() en cas d'erreur
+    $response->assertSessionHasErrors('email');
 });
 
-test('users can logout', function () {
-    $user = User::factory()->create();
+test('les utilisateurs peuvent se déconnecter', function () {
+    $user = Utilisateur::factory()->create();
 
+    // Correction : AuthController redirige vers 'login' après logout[cite: 1]
     $response = $this->actingAs($user)->post('/logout');
 
     $this->assertGuest();
-    $response->assertNoContent();
+    $response->assertRedirect(route('login'));
 });

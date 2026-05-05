@@ -4,36 +4,58 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
+    // Afficher le formulaire de connexion
     public function showLogin()
     {
-        return Auth::check()
-            ? redirect()->route('dashboard')
-            : view('auth.login');
-    }
-
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+        // Si déjà connecté, rediriger vers le tableau de bord
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
         }
 
-        return back()->withErrors(['email' => 'Identifiants incorrects.'])->onlyInput('email');
+
+        return view('auth.login');
     }
 
+    // Traiter la connexion
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email'       => 'required|email',
+            'password' => 'required|min:6',
+        ], [
+            'email.required'        => 'L\'adresse email est obligatoire.',
+            'email.email'           => 'L\'adresse email n\'est pas valide.',
+            'password.required' => 'Le mot de passe est obligatoire.',
+            'password.min'      => 'Le mot de passe doit contenir au moins 6 caractères.',
+        ]);
+
+        $credentials = [
+            'email'        => $request->email,
+            'password'     => $request->password, // Laravel utilise 'password' en interne
+            'actif'        => true,
+        ];
+
+       if (Auth::attempt($credentials, $request->boolean('se_souvenir'))) {
+        $request->session()->regenerate();
+        // Correction : Utilisation de auth()->user() avec parenthèses
+        return redirect()->route('dashboard')
+            ->with('succes', 'Bienvenue, ' . Auth::user()->nom . ' !');
+    }
+
+    return back()
+        ->withInput($request->only('email'))
+        ->withErrors(['email' => 'Email ou mot de passe incorrect, ou compte désactivé.']);
+    }
+    // Déconnexion
     public function logout(Request $request)
     {
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('login');
+
+        return redirect()->route('login')->with('succes', 'Bienvenue, ' . Auth::user()->nom . ' !');
     }
 }

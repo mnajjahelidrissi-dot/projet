@@ -2,46 +2,75 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seed the application's database.
+     */
     public function run(): void
     {
-        // Admin
-        User::create([
-            'nom'     => 'Admin',           // ✅ nom (pas name)
-            'prenom'  => 'Saham',           // ✅ prenom
-            'email'   => 'admin@saham.ma',
-            'password' => Hash::make('password'),
-            'role'    => 'administrateur',
-        ]);
-
-        // Responsable
-        User::create([
-            'nom'     => 'Responsable',
-            'prenom'  => 'Agence',
-            'email'   => 'responsable@saham.ma',
-            'password' => Hash::make('password'),
-            'role'    => 'responsable',
-        ]);
-
-        // Agents
-        $agents = [
-            ['Karim', 'Alaoui', 'karim@saham.ma'],
-            ['Fatima', 'Benali', 'fatima@saham.ma']
-        ];
-        
-        foreach ($agents as [$nom, $prenom, $email]) {
-            User::create([
-                'nom'     => $nom,
-                'prenom'  => $prenom,
-                'email'   => $email,
+        // 1. Création des Utilisateurs (Admin, Responsable, Agent)
+        DB::table('utilisateurs')->insert([
+            [
+                'nom' => 'Saham',
+                'prenom' => 'Admin',
+                'email' => 'admin@saham.ma',
                 'password' => Hash::make('password'),
-                'role'    => 'agent',
-            ]);
-        }
+                'role' => 'administrateur',
+                'actif' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nom' => 'Responsable',
+                'prenom' => 'User',
+                'email' => 'responsable@saham.ma',
+                'password' => Hash::make('password'),
+                'role' => 'responsable',
+                'actif' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nom' => 'Agent',
+                'prenom' => 'Test',
+                'email' => 'agent@saham.ma',
+                'password' => Hash::make('password'),
+                'role' => 'agent',
+                'actif' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        // 2. Création d'un Client
+        DB::table('clients')->insert([
+            'numero_client' => 'CLI-2026-0001',
+            'nom' => 'Alami',
+            'prenom' => 'Hassan',
+            'cin' => 'AB123456',
+            'telephone' => '0600112233',
+            'email' => 'hassan.alami@example.com',
+            'statut' => 'actif',
+            'cree_par' => 1, // L'ID de l'admin créé au dessus
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // 3. Création d'un Dossier (lié au client 1)
+        DB::table('dossiers')->insert([
+            'client_id' => 1,
+            'titre' => 'Dossier de test ',
+            'description' => 'Description facultative',
+            'statut' => 'en_attente',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // On ne remplit pas 'demandes' et 'documents' car tes migrations sont vides pour l'instant
     }
 }

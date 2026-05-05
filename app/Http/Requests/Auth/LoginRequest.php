@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Http\Requests\Auth;
-
+use App\Models\Utilisateur;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
@@ -41,6 +42,17 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+        $user = Utilisateur::where('email', $this->email)
+            ->first();
+       if (! $user ||
+            ! Hash::check($this->password, $user->password) ||
+            ! $user->actif) {  // ← ÇA BLOQUE LES COMPTES INACTIFS
+            RateLimiter::hit($this->throttleKey(), 5);
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

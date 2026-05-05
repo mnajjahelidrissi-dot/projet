@@ -4,93 +4,136 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
 {
+    // Liste des clients avec recherche
     public function index(Request $request)
     {
-        $query = Client::query();
+        $recherche = $request->input('recherche');
 
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('nom', 'like', "%$s%")
-                  ->orWhere('prenom', 'like', "%$s%")
-                  ->orWhere('cin', 'like', "%$s%")
-                  ->orWhere('email', 'like', "%$s%");
-            });
+        $clients = Client::with('createur')
+            ->when($recherche, function ($query, $recherche) {
+                $query->where('nom', 'like', "%{$recherche}%")
+                      ->orWhere('prenom', 'like', "%{$recherche}%")
+                      ->orWhere('cin', 'like', "%{$recherche}%")
+                      ->orWhere('numero_client', 'like', "%{$recherche}%")
+                      ->orWhere('telephone', 'like', "%{$recherche}%");
+            })
+            ->latest()
+            ->paginate(15);
+
+        return view('clients.index', compact('clients', 'recherche'));
+    }
+
+    // Formulaire de création
+    public function creer()
+    {
+        return view('clients.creer');
+    }
+
+    // Enregistrement du nouveau client
+    public function enregistrer(Request $request)
+    {
+        $request->validate([
+            'nom'            => 'required|string|max:100',
+            'prenom'         => 'required|string|max:100',
+            'cin'            => 'required|string|max:20|unique:clients,cin',
+            'date_naissance' => 'nullable|date|before:today',
+            'telephone'      => 'required|string|max:20',
+            'email'          => 'nullable|email|max:150',
+            'adresse'        => 'nullable|string|max:255',
+            'ville'          => 'nullable|string|max:100',
+            'profession'     => 'nullable|string|max:100',
+        ], [
+            'nom.required'       => 'Le nom est obligatoire.',
+            'prenom.required'    => 'Le prénom est obligatoire.',
+            'cin.required'       => 'La CIN est obligatoire.',
+            'cin.unique'         => 'Cette CIN est déjà enregistrée.',
+            'telephone.required' => 'Le téléphone est obligatoire.',
+            'email.email'        => 'L\'email n\'est pas valide.',
+            'date_naissance.before' => 'La date de naissance doit être dans le passé.',
+        ]);
+
+        Client::create([
+            'nom'            => strtoupper($request->nom),
+            'prenom'         => ucfirst(strtolower($request->prenom)),
+            'cin'            => strtoupper($request->cin),
+            'date_naissance' => $request->date_naissance,
+            'telephone'      => $request->telephone,
+            'email'          => $request->email,
+            'adresse'        => $request->adresse,
+            'ville'          => $request->ville,
+            'profession'     => $request->profession,
+            'statut'         => 'actif',
+            'cree_par'       => Auth::id(),
+        ]);
+
+        return redirect()->route('clients.index')->with('succes', 'Client enregistré avec succès.');
+    }
+
+    // Afficher le détail d'un client
+    public function afficher(Client $client)
+    {
+        $client->load(['dossiers.agent', 'createur']);
+        return view('clients.afficher', compact('client'));
+    }
+
+    // Formulaire de modification
+    public function modifier(Client $client)
+    {
+        return view('clients.modifier', compact('client'));
+    }
+
+    // Mise à jour du client
+    public function mettreAJour(Request $request, Client $client)
+    {
+        $request->validate([
+            'nom'            => 'required|string|max:100',
+            'prenom'         => 'required|string|max:100',
+            'cin'            => 'required|string|max:20|unique:clients,cin,' . $client->id,
+            'date_naissance' => 'nullable|date|before:today',
+            'telephone'      => 'required|string|max:20',
+            'email'          => 'nullable|email|max:150',
+            'adresse'        => 'nullable|string|max:255',
+            'ville'          => 'nullable|string|max:100',
+            'profession'     => 'nullable|string|max:100',
+            'statut'         => 'required|in:actif,inactif',
+        ], [
+            'nom.required'       => 'Le nom est obligatoire.',
+            'prenom.required'    => 'Le prénom est obligatoire.',
+            'cin.required'       => 'La CIN est obligatoire.',
+            'cin.unique'         => 'Cette CIN est déjà utilisée par un autre client.',
+            'telephone.required' => 'Le téléphone est obligatoire.',
+        ]);
+
+        $client->update([
+            'nom'            => strtoupper($request->nom),
+            'prenom'         => ucfirst(strtolower($request->prenom)),
+            'cin'            => strtoupper($request->cin),
+            'date_naissance' => $request->date_naissance,
+            'telephone'      => $request->telephone,
+            'email'          => $request->email,
+            'adresse'        => $request->adresse,
+            'ville'          => $request->ville,
+            'profession'     => $request->profession,
+            'statut'         => $request->statut,
+        ]);
+
+        return redirect()->route('clients.afficher', $client)->with('succes', 'Client mis à jour avec succès.');
+    }
+
+    // Suppression du client
+    public function supprimer(Client $client)
+    {
+        // Vérifier qu'il n'a pas de dossiers
+        if ($client->dossiers()->count() > 0) {
+            return back()->with('erreur', 'Impossible de supprimer ce client car il possède des dossiers.');
         }
 
-        $clients = $query->latest()->paginate(15)->withQueryString();
-
-        return view('clients.index', compact('clients'));
-    }
-
-    public function create()
-    {
-        return view('clients.create');
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'nom'         => 'required|string|max:100',
-            'prenom'      => 'required|string|max:100',
-            'cin'         => 'required|string|unique:clients,cin|max:20',
-            'date_naissance' => 'required|date',
-            'telephone'   => 'required|string|max:20',
-            'email'       => 'nullable|email|max:150',
-            'adresse'     => 'required|string|max:255',
-            'ville'       => 'required|string|max:100',
-        ]);
-
-        Client::create($data);
-
-        return redirect()->route('clients.index')->with('success', 'Client ajouté avec succès.');
-    }
-
-    public function show(Client $client)
-    {
-        $client->load(['dossiers.demandes', 'dossiers.agent']);
-        return view('clients.show', compact('client'));
-    }
-
-    public function edit(Client $client)
-    {
-        return view('clients.edit', compact('client'));
-    }
-
-    public function update(Request $request, Client $client)
-    {
-        $data = $request->validate([
-            'nom'         => 'required|string|max:100',
-            'prenom'      => 'required|string|max:100',
-            'cin'         => 'required|string|max:20|unique:clients,cin,' . $client->id,
-            'date_naissance' => 'required|date',
-            'telephone'   => 'required|string|max:20',
-            'email'       => 'nullable|email|max:150',
-            'adresse'     => 'required|string|max:255',
-            'ville'       => 'required|string|max:100',
-        ]);
-
-        $client->update($data);
-
-        return redirect()->route('clients.show', $client)->with('success', 'Client mis à jour.');
-    }
-
-    public function destroy(Client $client)
-    {
         $client->delete();
-        return redirect()->route('clients.index')->with('success', 'Client supprimé.');
-    }
 
-    public function search(Request $request)
-    {
-        $results = Client::where('nom', 'like', '%' . $request->q . '%')
-            ->orWhere('cin', 'like', '%' . $request->q . '%')
-            ->limit(10)
-            ->get(['id', 'nom', 'prenom', 'cin']);
-
-        return response()->json($results);
+        return redirect()->route('clients.index')->with('succes', 'Client supprimé avec succès.');
     }
 }

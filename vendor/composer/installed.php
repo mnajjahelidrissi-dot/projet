@@ -1,15 +1,21 @@
 <?php return array(
     'root' => array(
         'name' => 'laravel/laravel',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '59addd51aac630d1138b1f700f074f8b3783fad5',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'barryvdh/laravel-debugbar' => array(
+            'dev_requirement' => true,
+            'replaced' => array(
+                0 => 'v4.2.8',
+            ),
+        ),
         'brick/math' => array(
             'pretty_version' => '0.14.8',
             'version' => '0.14.8.0',
@@ -100,6 +106,15 @@
             'reference' => 'd2102955e48b9fd9ab24280a7ad12ed552752c4d',
             'type' => 'library',
             'install_path' => __DIR__ . '/../filp/whoops',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'fruitcake/laravel-debugbar' => array(
+            'pretty_version' => 'v4.2.8',
+            'version' => '4.2.8.0',
+            'reference' => '799d70c1101d3f8840dd76ff68ff6a78f9352905',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../fruitcake/laravel-debugbar',
             'aliases' => array(),
             'dev_requirement' => true,
         ),
@@ -407,9 +422,9 @@
             'dev_requirement' => false,
         ),
         'laravel/laravel' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '59addd51aac630d1138b1f700f074f8b3783fad5',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -532,6 +547,12 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'maximebf/debugbar' => array(
+            'dev_requirement' => true,
+            'replaced' => array(
+                0 => 'v3.7.6',
+            ),
+        ),
         'mockery/mockery' => array(
             'pretty_version' => '1.6.12',
             'version' => '1.6.12.0',
@@ -634,6 +655,24 @@
             'reference' => '4f7fd7836c6f332bb2933569e566a0d6c4cbed74',
             'type' => 'library',
             'install_path' => __DIR__ . '/../phar-io/version',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'php-debugbar/php-debugbar' => array(
+            'pretty_version' => 'v3.7.6',
+            'version' => '3.7.6.0',
+            'reference' => '1690ee1728827f9deb4b60457fa387cf44672c56',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-debugbar/php-debugbar',
+            'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'php-debugbar/symfony-bridge' => array(
+            'pretty_version' => 'v1.1.0',
+            'version' => '1.1.0.0',
+            'reference' => 'e37d2debe5d316408b00d0ab2688d9c2cf59b5ad',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-debugbar/symfony-bridge',
             'aliases' => array(),
             'dev_requirement' => true,
         ),

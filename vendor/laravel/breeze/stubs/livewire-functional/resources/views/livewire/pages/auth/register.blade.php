@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\Utilisateur;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -13,15 +13,17 @@ use function Livewire\Volt\state;
 layout('layouts.guest');
 
 state([
-    'name' => '',
+    'nom' => '',
+    'prenom' => '',
     'email' => '',
     'password' => '',
     'password_confirmation' => ''
 ]);
 
 rules([
-    'name' => ['required', 'string', 'max:255'],
-    'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+    'nom' => ['required', 'string', 'max:255'],
+    'prenom' => ['required', 'string', 'max:255'],
+    'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.Utilisateur::class],
     'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
 ]);
 
@@ -30,7 +32,7 @@ $register = function () {
 
     $validated['password'] = Hash::make($validated['password']);
 
-    event(new Registered($user = User::create($validated)));
+    event(new Registered($user = Utilisateur::create($validated)));
 
     Auth::login($user);
 
@@ -43,9 +45,16 @@ $register = function () {
     <form wire:submit="register">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <x-input-label for="nom" :value="__('Name')" />
+            <x-text-input wire:model="nom" id="nom" class="block mt-1 w-full" type="text" name="nom" required autofocus autocomplete="nom" />
+            <x-input-error :messages="$errors->get('nom')" class="mt-2" />
+        </div>
+
+        <!-- First Name -->
+        <div class="mt-4">
+            <x-input-label for="prenom" :value="__('First Name')" />
+            <x-text-input wire:model="prenom" id="prenom" class="block mt-1 w-full" type="text" name="prenom" required autofocus autocomplete="prenom" />
+            <x-input-error :messages="$errors->get('prenom')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
