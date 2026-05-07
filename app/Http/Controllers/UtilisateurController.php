@@ -64,23 +64,36 @@ class UtilisateurController extends Controller
     }
 
     public function destroy(Utilisateur $utilisateur)
-    {
-        if ($utilisateur->id=== Auth::id()) {
-            return back()->withErrors('Vous ne pouvez pas vous supprimer.');
-        }
-        return redirect()->route('utilisateurs.index')->with('success', 'Utilisateur supprimé.');
+   {
+    // Vérifier que l'utilisateur ne se supprime pas lui-même
+    if ($utilisateur->id === Auth::id()) {
+        return back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
     }
+
+    // Vérifier qu'il n'est pas le dernier admin
+    if ($utilisateur->role === 'administrateur') {
+        $adminCount = Utilisateur::where('role', 'administrateur')->count();
+        if ($adminCount <= 1) {
+            return back()->with('error', 'Impossible de supprimer le seul administrateur.');
+        }
+    }
+
+    // Supprimer l'utilisateur
+    $utilisateur->delete();
+
+    return redirect()->route('utilisateurs.index')->with('success', 'Utilisateur supprimé avec succès.');
+   }
  // Dans app/Http/Controllers/UtilisateurController.php
 
 public function toggleStatus(Utilisateur $utilisateur)
 {
-    // ✅ AJOUTER : Vérifier que l'utilisateur est administrateur
-    if (auth()->user()->role !== 'administrateur') {
+    //  Vérifier que l'utilisateur est administrateur
+    if (Auth::user()->role !== 'administrateur') {
         return back()->with('error', 'Action non autorisée. Vous devez être administrateur.');
     }
 
     // Empêcher l'utilisateur de se désactiver lui-même
-    if (auth()->id() === $utilisateur->id) {
+    if (Auth::id() === $utilisateur->id) {
         return back()->with('error', 'Vous ne pouvez pas modifier votre propre statut.');
     }
 

@@ -7,10 +7,12 @@ use App\Models\Client;
 use App\Models\Demande;
 use App\Models\Utilisateur;
 use App\Models\Historique;
+use App\Notifications\DossierStatutNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\DossiersExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DossierController extends Controller
 {
@@ -26,8 +28,8 @@ class DossierController extends Controller
             $query->where('agent_id', $request->agent_id);
         }
         if ($request->filled('non_affecte') && $request->non_affecte == '1') {
-        $query->whereNull('agent_id');
-         }
+            $query->whereNull('agent_id');
+        }
         // Un agent ne voit que ses dossiers
         if (Auth::user()->role === 'agent') {
             $query->where('agent_id', Auth::id());
@@ -61,7 +63,7 @@ class DossierController extends Controller
 
         $dossier = Dossier::create($data);
 
-        // ========== ENREGISTREMENT DANS L'HISTORIQUE ==========
+        // ENREGISTREMENT DANS L'HISTORIQUE
         Historique::enregistrer(
             dossierId: $dossier->id,
             action: Historique::ACTION_CREATION,
@@ -87,7 +89,7 @@ class DossierController extends Controller
             ->with('utilisateur')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-            $agents = Utilisateur::where('role', 'agent')->orderBy('nom')->get();
+        $agents = Utilisateur::where('role', 'agent')->orderBy('nom')->get();
         return view('dossiers.show', compact('dossier', 'historique'));
     }
 
@@ -118,7 +120,7 @@ class DossierController extends Controller
 
         $dossier->update($data);
 
-        // ========== ENREGISTREMENT DANS L'HISTORIQUE ==========
+        // ENREGISTREMENT DANS L'HISTORIQUE
         $modifications = [];
         if ($anciennesValeurs['titre'] != $dossier->titre) {
             $modifications[] = "Titre: '{$anciennesValeurs['titre']}' → '{$dossier->titre}'";
@@ -148,7 +150,7 @@ class DossierController extends Controller
         $dossierId = $dossier->id;
         $dossierTitre = $dossier->titre;
 
-        // ========== ENREGISTREMENT DANS L'HISTORIQUE AVANT SUPPRESSION ==========
+        // ENREGISTREMENT DANS L'HISTORIQUE AVANT SUPPRESSION
         Historique::enregistrer(
             dossierId: $dossierId,
             action: Historique::ACTION_SUPPRESSION,
@@ -168,8 +170,6 @@ class DossierController extends Controller
         ]);
 
         $ancienStatut = $dossier->statut;
-
-        // Mapping des statuts pour affichage
         $statuts = [
             'en_attente' => 'En attente',
             'en_cours' => 'En cours',
@@ -179,7 +179,7 @@ class DossierController extends Controller
 
         $dossier->update(['statut' => $request->statut]);
 
-        // ========== ENREGISTREMENT DANS L'HISTORIQUE ==========
+        // Enregistrement dans l'historique
         Historique::enregistrer(
             dossierId: $dossier->id,
             action: Historique::ACTION_CHANGEMENT_STATUT,
@@ -187,10 +187,12 @@ class DossierController extends Controller
             ancienneValeur: $ancienStatut,
             nouvelleValeur: $request->statut
         );
-
-        return back()->with('success', 'Statut mis à jour.');
+        if ($dossier->agent) {
+            $dossier->agent->notify(new DossierStatutNotification($dossier, $ancienStatut, $request->statut));
+        }
+        // ✅ AJOUTER LE MESSAGE DE SUCCÈS
+        return back()->with('success', 'Statut mis à jour avec succès.');
     }
-
     /**
      * Afficher l'historique complet d'un dossier
      */
@@ -204,38 +206,53 @@ class DossierController extends Controller
         return view('dossiers.historique', compact('dossier', 'historique'));
     }
     /**
- * Affecter un agent à un dossier
- */
-public function affecterAgent(Request $request, Dossier $dossier)
-{
-    // Vérifier que l'utilisateur connecté est admin ou responsable
-    if (!auth()->user()->estAdministrateur() && !auth()->user()->estResponsable()) {
-        return back()->with('erreur', 'Vous n\'avez pas l\'autorisation d\'affecter un agent.');
+     * Affecter un agent à un dossier
+     */
+    public function affecterAgent(Request $request, Dossier $dossier)
+    {
+        // Vérifier que l'utilisateur connecté est admin ou responsable
+        $user = Auth::user();
+
+        if (!$user || ($user->role !== 'admin' && $user->role !== 'responsable')) {
+            return back()->with('erreur', 'Vous n\'avez pas l\'autorisation d\'affecter un agent.');
+        }
+
+        $request->validate([
+            'agent_id' => 'required|exists:utilisateurs,id'
+        ]);
+
+        $ancienAgentId = $dossier->agent_id;
+        $dossier->update(['agent_id' => $request->agent_id]);
+
+        // Enregistrer dans l'historique
+        Historique::enregistrer(
+            dossierId: $dossier->id,
+            action: Historique::ACTION_AFFECTATION_AGENT,
+            details: "Agent affecté: " . ($ancienAgentId ? "ancien agent ID {$ancienAgentId} → " : "") . "nouvel agent ID {$request->agent_id}",
+            ancienneValeur: $ancienAgentId,
+            nouvelleValeur: $request->agent_id
+        );
+
+        return back()->with('succes', 'Agent affecté avec succès.');
+    }
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new DossiersExport($request->input('statut'), $request->input('agent_id')),
+            'dossiers_' . date('Y-m-d') . '.xlsx'
+        );
     }
 
-    $request->validate([
-        'agent_id' => 'required|exists:utilisateurs,id'
-    ]);
 
-    $ancienAgentId = $dossier->agent_id;
-    $dossier->update(['agent_id' => $request->agent_id]);
+    public function exportPdf(Dossier $dossier)
+    {
+        // Charger les relations nécessaires
+        $dossier->load(['client', 'agent', 'demandes', 'documents', 'historique']);
 
-    // Enregistrer dans l'historique
-    Historique::enregistrer(
-        dossierId: $dossier->id,
-        action: Historique::ACTION_AFFECTATION_AGENT,
-        details: "Agent affecté: " . ($ancienAgentId ? "ancien agent ID {$ancienAgentId} → " : "") . "nouvel agent ID {$request->agent_id}",
-        ancienneValeur: $ancienAgentId,
-        nouvelleValeur: $request->agent_id
-    );
+        // Générer le PDF
+        $pdf = Pdf::loadView('dossiers.pdf', compact('dossier'));
 
-    return back()->with('succes', 'Agent affecté avec succès.');
-}
-public function export(Request $request)
-{
-    return Excel::download(
-        new DossiersExport($request->input('statut'), $request->input('agent_id')),
-        'dossiers_' . date('Y-m-d') . '.xlsx'
-    );
-}
+        // Retourner le PDF en téléchargement
+        return $pdf->download('dossier_' . $dossier->numero_dossier . '.pdf');
+    }
 }

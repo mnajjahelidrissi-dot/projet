@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Utilisateur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -41,17 +42,17 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('se_souvenir'))) {
             $request->session()->regenerate();
 
-            $user = Auth::user();
-            $nomComplet = $user->prenom . ' ' . $user->nom;
+            $utilisateur = Utilisateur::find(Auth::id());
+            $nomComplet = $utilisateur->prenom . ' ' . $utilisateur->nom;
 
-            // ✅ REDIRECTION SELON LE RÔLE
-            if ($user->estAdministrateur()) {
+
+            if ($utilisateur->estAdministrateur()) {
                 return redirect()->route('dashboard')
                     ->with('succes', 'Bienvenue Administrateur, ' . $nomComplet . ' !');
-            } elseif ($user->estResponsable()) {
+            } elseif ($utilisateur->estResponsable()) {
                 return redirect()->route('dashboard')
                     ->with('succes', 'Bienvenue Responsable, ' . $nomComplet . ' !');
-            } elseif ($user->estAgent()) {
+            } elseif ($utilisateur->estAgent()) {
                 return redirect()->route('dashboard')
                     ->with('succes', 'Bienvenue Agent, ' . $nomComplet . ' !');
             }

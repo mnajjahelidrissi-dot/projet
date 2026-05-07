@@ -7,12 +7,11 @@ use App\Models\Utilisateur;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
-
-
 {
     public function edit(Request $request): View
     {
@@ -25,7 +24,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $user->fill($request->validated());
+        // Mettre à jour les informations de base
+        $user->nom = $request->nom;
+        $user->prenom = $request->prenom;
+        $user->email = $request->email;
+        $user->telephone = $request->telephone;
+
+        // Si un nouveau mot de passe est fourni, le hasher
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
 
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;

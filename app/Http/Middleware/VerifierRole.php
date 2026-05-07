@@ -10,11 +10,13 @@ class VerifierRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!auth()->check()) {
+        $user = $request->user();
+
+        if (!$user) {
             return redirect()->route('login');
         }
 
-        if (!in_array(auth()->user()->role, $roles)) {
+        if (!in_array($user->role, $roles)) {
             abort(403, "Action non autorisée.");
         }
 

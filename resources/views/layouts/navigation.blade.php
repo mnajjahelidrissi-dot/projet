@@ -41,8 +41,66 @@
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Right Side: Notifications & Settings Dropdown -->
+            <div class="hidden sm:flex sm:items-center sm:space-x-3">
+
+                <!-- 📢 NOTIFICATIONS DROPDOWN -->
+                <div class="relative" x-data="{ openNotifications: false }">
+                    <button @click="openNotifications = !openNotifications" class="relative p-1.5 rounded-full hover:bg-gray-100 transition-colors">
+                        <i class="bi bi-bell text-gray-600 text-xl"></i>
+                        @auth
+                            @if(auth()->user()->unreadNotifications->count() > 0)
+                                <span class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                                    {{ auth()->user()->unreadNotifications->count() > 9 ? '9+' : auth()->user()->unreadNotifications->count() }}
+                                </span>
+                            @endif
+                        @endauth
+                    </button>
+
+                    <div x-show="openNotifications"
+                         @click.outside="openNotifications = false"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-2"
+                         class="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
+                        <div class="p-3 border-b border-gray-100">
+                            <h3 class="font-semibold text-gray-700">Notifications</h3>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            @forelse(auth()->user()->notifications->take(10) as $notification)
+                                <div class="p-3 border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                    <p class="text-sm text-gray-700">{{ $notification->data['message'] ?? 'Notification' }}</p>
+                                    <div class="flex items-center justify-between mt-1">
+                                        <p class="text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
+                                        <form method="POST" action="{{ route('notifications.mark-as-read', $notification->id) }}" class="inline">
+                                            @csrf
+                                            <button type="submit" class="text-xs text-blue-500 hover:underline">Marquer comme lue</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="p-6 text-center">
+                                    <i class="bi bi-bell-slash text-gray-300 text-2xl"></i>
+                                    <p class="text-sm text-gray-400 mt-1">Aucune notification</p>
+                                </div>
+                            @endforelse
+                        </div>
+                        @if(auth()->user()->notifications->count() > 0)
+                            <div class="p-2 border-t border-gray-100 text-center">
+                                <form method="POST" action="{{ route('notifications.mark-all-as-read') }}">
+                                    @csrf
+                                    <button type="submit" class="text-xs text-blue-600 hover:underline">Tout marquer comme lu</button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Settings Dropdown -->
                 <div class="relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
                     <div @click="open = ! open">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -147,3 +205,8 @@
         </div>
     </div>
 </nav>
+
+<!-- Ajout du style pour x-cloak -->
+<style>
+    [x-cloak] { display: none !important; }
+</style>

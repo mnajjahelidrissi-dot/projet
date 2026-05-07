@@ -9,7 +9,8 @@ use App\Http\Controllers\DossierController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\Auth\PasswordController; // ✅ Assurez-vous que cette ligne existe
+use App\Http\Controllers\Auth\PasswordController;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,11 +45,25 @@ Route::middleware(['auth'])->group(function () {
         $request->session()->regenerateToken();
         return redirect()->route('login');
     })->name('logout');
-
+    Route::put('/password', [PasswordController::class, 'update'])->name('password.update'); // ✅ Route pour la mise à jour du mot de passe
     // ✅ Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::match(['put', 'patch'], '/password', [PasswordController::class, 'update'])->name('password.update');
 
+
+    // Version simplifiée - masque juste l'affichage des notifications
+    Route::prefix('notifications')->name('notifications.')->middleware('auth')->group(function () {
+        Route::post('{id}/mark-as-read', function ($id) {
+            // Version simplifiée : on ne fait rien pour l'instant
+            // La fonctionnalité sera ajoutée plus tard
+            return back();
+        })->name('mark-as-read');
+
+        Route::post('mark-all-as-read', function () {
+            // Version simplifiée : on ne fait rien pour l'instant
+            return back();
+        })->name('mark-all-as-read');
+    });
     // --- Clients ---
     Route::prefix('clients')->name('clients.')->group(function () {
         Route::get('/', [ClientController::class, 'index'])->name('index');
@@ -78,23 +93,26 @@ Route::middleware(['auth'])->group(function () {
 
         // ✅ Historique du dossier (optionnel)
         Route::get('/{dossier}/historique', [DossierController::class, 'historique'])->name('historique');
+
+        Route::get('/dossiers/{dossier}/pdf', [DossierController::class, 'exportPdf'])->name('dossiers.pdf');
     });
 
+
     // --- Demandes ---
-Route::prefix('demandes')->name('demandes.')->group(function () {
-    Route::get('/', [DemandeController::class, 'index'])->name('index');
-    Route::get('/create', [DemandeController::class, 'create'])->name('create');
-    Route::post('/', [DemandeController::class, 'store'])->name('store');
-    Route::get('/{demande}', [DemandeController::class, 'show'])->name('show');
-    Route::delete('/{demande}', [DemandeController::class, 'destroy'])->name('destroy');
-});
+    Route::prefix('demandes')->name('demandes.')->group(function () {
+        Route::get('/', [DemandeController::class, 'index'])->name('index');
+        Route::get('/create', [DemandeController::class, 'create'])->name('create');
+        Route::post('/', [DemandeController::class, 'store'])->name('store');
+        Route::get('/{demande}', [DemandeController::class, 'show'])->name('show');
+        Route::delete('/{demande}', [DemandeController::class, 'destroy'])->name('destroy');
+    });
     // ---// --- Documents ---
-Route::prefix('documents')->name('documents.')->group(function () {
-    Route::get('/', [DocumentController::class, 'index'])->name('index');
-    Route::post('/', [DocumentController::class, 'store'])->name('store');
-    Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
-    Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
-});
+    Route::prefix('documents')->name('documents.')->group(function () {
+        Route::get('/', [DocumentController::class, 'index'])->name('index');
+        Route::post('/', [DocumentController::class, 'store'])->name('store');
+        Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+        Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
+    });
 
     // Le test PasswordUpdateTest envoie une requête PUT sur /password
     // On utilise la méthode 'update' du PasswordController
@@ -105,20 +123,18 @@ Route::prefix('documents')->name('documents.')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // --- Administration ---
-   Route::prefix('utilisateurs')->name('utilisateurs.')->middleware('role:administrateur')->group(function () {
-    Route::get('/', [UtilisateurController::class, 'index'])->name('index');
-    Route::get('/creer', [UtilisateurController::class, 'create'])->name('creer');
-    Route::post('/', [UtilisateurController::class, 'store'])->name('enregistrer');
-    Route::get('/{utilisateur}/modifier', [UtilisateurController::class, 'edit'])->name('modifier');
-    Route::put('/{utilisateur}', [UtilisateurController::class, 'update'])->name('mettre-a-jour');
-    Route::post('/{utilisateur}/statut', [UtilisateurController::class, 'toggleStatus'])->name('basculer-status');
-});
-       // Exports
+    Route::prefix('utilisateurs')->name('utilisateurs.')->middleware('role:administrateur')->group(function () {
+        Route::get('/', [UtilisateurController::class, 'index'])->name('index');
+        Route::get('/creer', [UtilisateurController::class, 'create'])->name('creer');
+        Route::post('/', [UtilisateurController::class, 'store'])->name('enregistrer');
+        Route::get('/{utilisateur}/modifier', [UtilisateurController::class, 'edit'])->name('modifier');
+        Route::put('/{utilisateur}', [UtilisateurController::class, 'update'])->name('mettre-a-jour');
+        Route::post('/{utilisateur}/statut', [UtilisateurController::class, 'toggleStatus'])->name('basculer-status');
+    });
+    // Exports
     Route::get('/export/clients', [ClientController::class, 'export'])->name('export.clients');
     Route::get('/export/dossiers', [DossierController::class, 'export'])->name('export.dossiers');
     Route::get('/export/stats', [DashboardController::class, 'exportStats'])->name('export.stats');
-
-
 });
 Route::get('/test-csrf', function () {
     return '

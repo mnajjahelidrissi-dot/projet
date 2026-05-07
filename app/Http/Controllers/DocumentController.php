@@ -7,6 +7,7 @@ use App\Models\Dossier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+
 class DocumentController extends Controller
 {
     public const TYPES = [
@@ -33,11 +34,18 @@ class DocumentController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'dossier_id'   => 'required|exists:dossiers,id',
-            'type_document' => 'required|in:' . implode(',', array_keys(self::TYPES)),
-            'fichier'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
-        ]);
+        $request->validate(
+            [
+                'dossier_id'   => 'required|exists:dossiers,id',
+                'type_document' => 'required|in:' . implode(',', array_keys(self::TYPES)),
+                'fichier'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            ],
+            [
+                'fichier.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+                'fichier.mimes' => 'Le fichier doit être au format PDF, JPG, JPEG ou PNG.',
+                'fichier.required' => 'Veuillez sélectionner un fichier.',
+            ]
+        );
 
         $path = $request->file('fichier')->store('documents', 'private');
 

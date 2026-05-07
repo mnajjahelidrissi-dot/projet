@@ -1,4 +1,4 @@
-{{-- FICHIER: resources/views/dossiers/edit.blade.php --}}
+
 @extends('layouts.app')
 @section('title', 'Modifier dossier')
 @section('page-title', 'Modifier: ' . $dossier->titre)

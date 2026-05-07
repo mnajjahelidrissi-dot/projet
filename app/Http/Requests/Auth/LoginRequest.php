@@ -1,14 +1,14 @@
 <?php
 
 namespace App\Http\Requests\Auth;
+
 use App\Models\Utilisateur;
 use Illuminate\Auth\Events\Lockout;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
@@ -23,8 +23,6 @@ class LoginRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -42,23 +40,31 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-        $user = Utilisateur::where('email', $this->email)
-            ->first();
-       if (! $user ||
-            ! Hash::check($this->password, $user->password) ||
-            ! $user->actif) {  // ← ÇA BLOQUE LES COMPTES INACTIFS
-            RateLimiter::hit($this->throttleKey(), 5);
+
+        // Tentative d'authentification UNIQUE avec Auth::attempt()
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
+
+            // Log des tentatives échouées
+            Log::warning('Tentative de connexion échouée', [
+                'email' => $this->email,
+                'ip' => $this->ip(),
+                'user_agent' => $this->userAgent(),
+            ]);
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // Vérifier si le compte est actif (après authentification réussie)
+        $user = Auth::user();
+        if (! $user->actif) {
+            Auth::logout(); // Déconnecter immédiatement
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Votre compte est désactivé. Veuillez contacter un administrateur.',
             ]);
         }
 

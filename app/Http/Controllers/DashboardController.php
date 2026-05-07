@@ -24,7 +24,7 @@ class DashboardController extends Controller
 
         $utilisateur = Utilisateur::find($utilisateur->id);
 
-        // ========== 1. STATISTIQUES DE BASE ==========
+        //  STATISTIQUES DE BASE
         $stats = [
             'total_clients'   => Client::count(),
             'total_dossiers'  => Dossier::count(),
@@ -35,7 +35,7 @@ class DashboardController extends Controller
             'rejete'          => Dossier::where('statut', 'rejete')->count(),
         ];
 
-        // ========== 2. STATISTIQUES SPÉCIFIQUES SELON LE RÔLE ==========
+        // . STATISTIQUES SPÉCIFIQUES SELON LE RÔLE
         if ($utilisateur->estAdministrateur()) {
             // Admin voit toutes les statistiques
             $stats['role_label'] = 'Administrateur';
@@ -55,12 +55,12 @@ class DashboardController extends Controller
             $stats['role_icon'] = '👤';
         }
 
-        // ========== 3. RÉPARTITION PAR TYPE DE DEMANDE ==========
+        //  RÉPARTITION PAR TYPE DE DEMANDE
         $repartition = Demande::select('type_demande', DB::raw('count(*) as total'))
             ->groupBy('type_demande')
             ->pluck('total', 'type_demande');
 
-        // ========== 4. RÉPARTITION PAR STATUT (pour graphique) ==========
+        //  RÉPARTITION PAR STATUT (pour graphique)
         $repartitionTypes = Dossier::select('statut', DB::raw('count(*) as total'))
             ->groupBy('statut')
             ->get()
@@ -77,16 +77,16 @@ class DashboardController extends Controller
                 ];
             });
 
-        // ========== 5. DERNIERS DOSSIERS (selon le rôle) ==========
+        // DERNIERS DOSSIERS (selon le rôle)
         $derniersDossiers = Dossier::with(['client', 'agent'])
             ->when($utilisateur->estAgent(), function($query) use ($utilisateur) {
                 return $query->where('agent_id', $utilisateur->id);
             })
             ->latest()
-            ->take(10)  // Augmenté à 10 pour plus de pertinence
+            ->take(10)
             ->get();
 
-        // ========== 6. DOSSIERS RÉCENTS PAR STATUT (pour admin/responsable) ==========
+        //  DOSSIERS RÉCENTS PAR STATUT (pour admin/responsable)
         $dossiersParStatut = [];
         if ($utilisateur->estAdministrateur() || $utilisateur->estResponsable()) {
             $dossiersParStatut = [
@@ -96,8 +96,6 @@ class DashboardController extends Controller
                 'rejete' => Dossier::with(['client', 'agent'])->where('statut', 'rejete')->latest()->take(5)->get(),
             ];
         }
-
-        // ========== 7. TOP AGENTS (pour admin/responsable) ==========
         $topAgents = [];
         if ($utilisateur->estAdministrateur() || $utilisateur->estResponsable()) {
             $topAgents = Utilisateur::where('role', 'agent')
@@ -108,7 +106,6 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // ========== 8. RETOUR VUE AVEC TOUTES LES VARIABLES ==========
         return view('dashboard.index', compact(
             'stats',
             'repartition',
@@ -123,7 +120,9 @@ class DashboardController extends Controller
     public function exportStats()
     {
         // Vérifier que seul admin ou responsable peut exporter
-        if (!auth()->user()->estAdministrateur() && !auth()->user()->estResponsable()) {
+        $utilisateur = Utilisateur::find(Auth::id());
+
+        if (!$utilisateur || (!$utilisateur->estAdministrateur() && !$utilisateur->estResponsable())) {
             return back()->with('error', 'Vous n\'avez pas l\'autorisation d\'exporter les statistiques.');
         }
 
