@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('titre', 'Client : ' . $client->nom_complet)
 
-@section('contenu')
+@section('content')
 
     <div class="d-flex align-items-center gap-2 mb-4">
         <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-secondary">
@@ -111,7 +111,7 @@
                                     @endif
                                 </small>
                             </div>
-                            <a href="{{ route('dossiers.afficher', $dossier) }}"
+                            <a href="{{ route('dossiers.show', $dossier) }}"
                                 class="btn btn-sm btn-outline-secondary ms-2">
                                 <i class="bi bi-eye"></i>
                             </a>

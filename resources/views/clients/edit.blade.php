@@ -1,10 +1,10 @@
 @extends('layouts.app')
 @section('titre', 'Modifier le client')
 
-@section('contenu')
+@section('content')
 
     <div class="d-flex align-items-center gap-2 mb-4">
-        <a href="{{ route('clients.afficher', $client) }}" class="btn btn-sm btn-outline-secondary">
+        <a href="{{ route('clients.show', $client) }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left"></i>
         </a>
         <h5 class="fw-bold mb-0">Modifier le client — {{ $client->nom_complet }}</h5>
@@ -108,7 +108,7 @@
                     <button type="submit" class="btn btn-saham px-4">
                         <i class="bi bi-check-lg me-1"></i> Mettre à jour
                     </button>
-                    <a href="{{ route('clients.afficher', $client) }}" class="btn btn-outline-secondary px-4">
+                    <a href="{{ route('clients.show', $client) }}" class="btn btn-outline-secondary px-4">
                         Annuler
                     </a>
                 </div>

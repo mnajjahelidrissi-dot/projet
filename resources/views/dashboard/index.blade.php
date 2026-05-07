@@ -121,4 +121,19 @@
             </div>
         </div>
     </div>
+    @section('content')
+    <!-- Ajoutez cette ligne -->
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Bienvenue sur votre tableau de bord</h1>
+
+    {{-- KPIs --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        ...
+    </div>
+    <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Tableau de bord</h1>
+    <a href="{{ route('export.stats') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700">
+        <i class="bi bi-file-excel"></i> Exporter les statistiques
+    </a>
+</div>
+    @endsection
 @endsection

@@ -11,13 +11,13 @@ class UtilisateurController extends Controller
 {
     public function index()
     {
-        $users = Utilisateur::latest()->paginate(20);
-        return view('users.index', compact('users'));
+        $utilisateurs= Utilisateur::latest()->paginate(20);
+        return view('utilisateurs.index', compact('utilisateurs'));
     }
 
     public function create()
     {
-        return view('users.create');
+        return view('utilisateurs.create');
     }
 
     public function store(Request $request)
@@ -36,20 +36,20 @@ class UtilisateurController extends Controller
         $user = Utilisateur::where('email', $data['email'])->first();
         Auth::login($user);
 
-        return redirect()->route('users.index')->with('success', 'Utilisateur créé.');
+        return redirect()->route('utilisateurs.index')->with('success', 'Utilisateur créé.');
     }
 
-    public function edit(Utilisateur $user)
+    public function edit(Utilisateur $utilisateur)
     {
-        return view('users.edit', compact('user'));
+        return view('utilisateurs.edit', compact('utilisateur'));
     }
 
-    public function update(Request $request, Utilisateur $user)
+    public function update(Request $request, Utilisateur $utilisateur)
     {
         $data = $request->validate([
             'nom'  => 'required|string|max:100',
             'prenom'  => 'required|string|max:100',
-            'email' => 'required|email|unique:utilisateurs,email,' . $user->id,
+            'email' => 'required|email|unique:utilisateurs,email,' . $utilisateur->id,
             'role'  => 'required|in:administrateur,agent,responsable',
         ]);
 
@@ -58,17 +58,38 @@ class UtilisateurController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-        $user->update($data);
+        $utilisateur->update($data);
 
-        return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour.');
+        return redirect()->route('utilisateurs.index')->with('success', 'Utilisateur mis à jour.');
     }
 
-    public function destroy(Utilisateur $user)
+    public function destroy(Utilisateur $utilisateur)
     {
-        if ($user->id=== Auth::id()) {
+        if ($utilisateur->id=== Auth::id()) {
             return back()->withErrors('Vous ne pouvez pas vous supprimer.');
         }
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'Utilisateur supprimé.');
+        return redirect()->route('utilisateurs.index')->with('success', 'Utilisateur supprimé.');
     }
+ // Dans app/Http/Controllers/UtilisateurController.php
+
+public function toggleStatus(Utilisateur $utilisateur)
+{
+    // ✅ AJOUTER : Vérifier que l'utilisateur est administrateur
+    if (auth()->user()->role !== 'administrateur') {
+        return back()->with('error', 'Action non autorisée. Vous devez être administrateur.');
+    }
+
+    // Empêcher l'utilisateur de se désactiver lui-même
+    if (auth()->id() === $utilisateur->id) {
+        return back()->with('error', 'Vous ne pouvez pas modifier votre propre statut.');
+    }
+
+    // Inversion du statut
+    $utilisateur->update([
+        'actif' => !$utilisateur->actif
+    ]);
+
+    $message = $utilisateur->actif ? 'Utilisateur activé avec succès.' : 'Utilisateur désactivé avec succès.';
+    return back()->with('success', $message);
+}
 }

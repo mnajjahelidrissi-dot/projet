@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Connexion - SAHAM BANK</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     <h1>SAHAM BANK</h1>

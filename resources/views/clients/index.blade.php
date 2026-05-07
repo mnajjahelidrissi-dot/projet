@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('titre', 'Clients')
 
-@section('contenu')
+@section('content')
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0"><i class="bi bi-people me-2" style="color:var(--saham-vert)"></i>Liste des clients</h5>
@@ -65,7 +65,7 @@
                                     </span>
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ route('clients.afficher', $client) }}"
+                                    <a href="{{ route('clients.show', $client) }}"
                                         class="btn btn-sm btn-outline-secondary me-1" title="Voir">
                                         <i class="bi bi-eye"></i>
                                     </a>
@@ -97,6 +97,17 @@
             </div>
         </div>
     </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold mb-0">Liste des clients</h5>
+    <div>
+        <a href="{{ route('export.clients') }}" class="btn btn-success me-2">
+            <i class="bi bi-file-excel"></i> Exporter Excel
+        </a>
+        <a href="{{ route('clients.creer') }}" class="btn btn-saham">
+            <i class="bi bi-person-plus"></i> Nouveau client
+        </a>
+    </div>
+</div>
 
     <!-- Pagination -->
     <div class="mt-3 d-flex justify-content-center">

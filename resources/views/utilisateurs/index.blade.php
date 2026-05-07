@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('titre', 'Gestion des utilisateurs')
 
-@section('contenu')
+@section('content')
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0">
@@ -62,7 +62,7 @@
                                     </a>
                                     @if ($utilisateur->id !== auth()->id())
                                         <form method="POST"
-                                            action="{{ route('utilisateurs.basculer-statut', $utilisateur) }}"
+                                            action="{{ route('utilisateurs.basculer-status', $utilisateur) }}"
                                             class="d-inline">
                                             @csrf
                                             <button type="submit"

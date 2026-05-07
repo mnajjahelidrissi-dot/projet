@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('titre', 'Nouvel utilisateur')
 
-@section('contenu')
+@section('content')
 
     <div class="d-flex align-items-center gap-2 mb-4">
         <a href="{{ route('utilisateurs.index') }}" class="btn btn-sm btn-outline-secondary">

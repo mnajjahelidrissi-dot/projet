@@ -42,6 +42,7 @@ class Utilisateur extends Authenticatable implements CanResetPasswordContract
         'role',
         'telephone',
         'actif',
+        'remember_token',
     ];
 
     protected $hidden = [

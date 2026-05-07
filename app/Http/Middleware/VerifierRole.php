@@ -8,10 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VerifierRole
 {
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // Logique de vérification (exemple)
-        if (!auth()->check() || auth()->user()->role !== $role) {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        if (!in_array(auth()->user()->role, $roles)) {
             abort(403, "Action non autorisée.");
         }
 

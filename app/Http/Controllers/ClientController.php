@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Exports\ClientsExport;
+use Maatwebsite\Excel\Facades\Excel;
 class ClientController extends Controller
 {
     // Liste des clients avec recherche
@@ -13,7 +14,8 @@ class ClientController extends Controller
     {
         $recherche = $request->input('recherche');
 
-        $clients = Client::with('createur')
+        $clients = Client::withCount('dossiers')
+            ->with('createur')
             ->when($recherche, function ($query, $recherche) {
                 $query->where('nom', 'like', "%{$recherche}%")
                       ->orWhere('prenom', 'like', "%{$recherche}%")
@@ -136,4 +138,12 @@ class ClientController extends Controller
 
         return redirect()->route('clients.index')->with('succes', 'Client supprimé avec succès.');
     }
+    public function export(Request $request)
+{
+    $filtres = [
+        'recherche' => $request->input('recherche')
+    ];
+
+    return Excel::download(new ClientsExport($filtres), 'clients_' . date('Y-m-d') . '.xlsx');
+}
 }

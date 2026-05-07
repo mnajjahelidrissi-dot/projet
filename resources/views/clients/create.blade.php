@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('titre', 'Nouveau client')
 
-@section('contenu')
+@section('content')
 
     <div class="d-flex align-items-center gap-2 mb-4">
         <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-secondary">
