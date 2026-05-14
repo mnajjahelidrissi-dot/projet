@@ -3,12 +3,14 @@
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Auth\Middleware\Authenticate;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Routing\Middleware\ValidateSignature;
+use App\Http\Middleware\VerifierRole;
 
 class Kernel extends HttpKernel
 {
     protected $middleware = [
-        //\App\Http\Middleware\TrustHosts::class,
-        //\App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
@@ -27,26 +29,25 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-           // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
-    // ✅ C'EST ICI L'IMPORTANT - Ajoutez VerifierRole
     protected $middlewareAliases = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
+        // Middlewares standards de Laravel
+        'auth' => Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+        'guest' => RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \App\Http\Middleware\ValidateSignature::class,
+        'signed' => ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
 
-        // ✅ AJOUTEZ CETTE LIGNE
-        'role' => \App\Http\Middleware\VerifierRole::class,
+        // Votre middleware personnalisé
+        'role' => VerifierRole::class,
     ];
 }

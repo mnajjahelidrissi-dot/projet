@@ -1,5 +1,5 @@
 <?php
-
+//Fichier pour la gestion du changement de mot de passe des utilisateurs
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;

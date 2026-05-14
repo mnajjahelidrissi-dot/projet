@@ -1,5 +1,5 @@
 <?php
-
+//CRUD des documents liés aux dossiers clients (CIN, justificatif de domicile, contrat...)
 namespace App\Http\Controllers;
 
 use App\Models\Document;

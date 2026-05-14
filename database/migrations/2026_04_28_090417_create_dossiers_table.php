@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
   public function up(): void
 {
-    // 1. On crée d'abord la table et les colonnes SANS les contraintes
-    Schema::create('dossiers', function (Blueprint $table) {
         $table->id();
 
         // Définition simple des colonnes (assurez-vous qu'elles sont NULLABLE)

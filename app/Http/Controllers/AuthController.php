@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Utilisateur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -20,7 +19,7 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    // Traiter la connexion
+    // Verification de la connexion
     public function login(Request $request)
     {
         $request->validate([
@@ -45,7 +44,7 @@ class AuthController extends Controller
             $utilisateur = Utilisateur::find(Auth::id());
             $nomComplet = $utilisateur->prenom . ' ' . $utilisateur->nom;
 
-
+            // Redirection basée sur le rôle de l'utilisateur
             if ($utilisateur->estAdministrateur()) {
                 return redirect()->route('dashboard')
                     ->with('succes', 'Bienvenue Administrateur, ' . $nomComplet . ' !');

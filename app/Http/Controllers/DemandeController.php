@@ -1,5 +1,5 @@
 <?php
-
+//Gestion des demandes liées aux dossiers clients(CRUD) (ouverture de compte, demande de carte, etc.)
 namespace App\Http\Controllers;
 
 use App\Models\Demande;

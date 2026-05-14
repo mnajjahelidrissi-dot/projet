@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Client;
 use App\Models\Dossier;
 use App\Models\Demande;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -29,7 +30,7 @@ class StatsExport implements FromArray, WithHeadings, ShouldAutoSize
         ];
 
         // Ajouter la répartition par type de demande
-        $repartition = Demande::select('type_demande', \DB::raw('count(*) as total'))
+        $repartition = Demande::select('type_demande', DB::raw('count(*) as total'))
             ->groupBy('type_demande')
             ->get();
 

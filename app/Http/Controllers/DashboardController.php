@@ -24,7 +24,7 @@ class DashboardController extends Controller
 
         $utilisateur = Utilisateur::find($utilisateur->id);
 
-        //  STATISTIQUES DE BASE
+        //  Statisitiques de base
         $stats = [
             'total_clients'   => Client::count(),
             'total_dossiers'  => Dossier::count(),
@@ -39,20 +39,15 @@ class DashboardController extends Controller
         if ($utilisateur->estAdministrateur()) {
             // Admin voit toutes les statistiques
             $stats['role_label'] = 'Administrateur';
-            $stats['role_icon'] = '👑';
-        }
-        elseif ($utilisateur->estResponsable()) {
+        } elseif ($utilisateur->estResponsable()) {
             // Responsable voit toutes les statistiques aussi
             $stats['role_label'] = 'Responsable';
-            $stats['role_icon'] = '📊';
-        }
-        elseif ($utilisateur->estAgent()) {
+        } elseif ($utilisateur->estAgent()) {
             // Agent voit seulement ses propres statistiques
-            $stats['mes_dossiers']    = Dossier::where('agent_id', $utilisateur->id)->count();
-            $stats['mes_en_cours']    = Dossier::where('agent_id', $utilisateur->id)->where('statut', 'en_cours')->count();
-            $stats['mes_en_attente']  = Dossier::where('agent_id', $utilisateur->id)->where('statut', 'en_attente')->count();
+            $stats['mes_dossiers']    = Dossier::where('agent_id', $utilisateur->id())->count();
+            $stats['mes_en_cours']    = Dossier::where('agent_id', $utilisateur->id())->where('statut', 'en_cours')->count();
+            $stats['mes_en_attente']  = Dossier::where('agent_id', $utilisateur->id())->where('statut', 'en_attente')->count();
             $stats['role_label'] = 'Agent';
-            $stats['role_icon'] = '👤';
         }
 
         //  RÉPARTITION PAR TYPE DE DEMANDE
@@ -79,7 +74,7 @@ class DashboardController extends Controller
 
         // DERNIERS DOSSIERS (selon le rôle)
         $derniersDossiers = Dossier::with(['client', 'agent'])
-            ->when($utilisateur->estAgent(), function($query) use ($utilisateur) {
+            ->when($utilisateur->estAgent(), function ($query) use ($utilisateur) {
                 return $query->where('agent_id', $utilisateur->id);
             })
             ->latest()

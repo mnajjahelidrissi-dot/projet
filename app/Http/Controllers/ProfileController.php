@@ -1,5 +1,5 @@
 <?php
-
+//Gestion du profil utilisateur (affichage, modification des informations personnelles, changement de mot de passe, suppression du compte)
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;

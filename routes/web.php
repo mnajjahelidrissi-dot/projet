@@ -14,12 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
-/*
-|--------------------------------------------------------------------------
-| Routes Publiques
-|--------------------------------------------------------------------------
-*/
+// Routes Publiques
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,15 +25,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 });
 
-/*
-|--------------------------------------------------------------------------
-| Routes Authentifiées
-|--------------------------------------------------------------------------
-*/
+// Routes Authentifiées
 
 Route::middleware(['auth'])->group(function () {
 
-    // ✅ Déconnexion
+    //  Déconnexion
     Route::post('/logout', function (Request $request) {
         Auth::logout();
         $request->session()->invalidate();
@@ -46,25 +37,22 @@ Route::middleware(['auth'])->group(function () {
         return redirect()->route('login');
     })->name('logout');
     Route::put('/password', [PasswordController::class, 'update'])->name('password.update'); // ✅ Route pour la mise à jour du mot de passe
-    // ✅ Dashboard
+    //  Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::match(['put', 'patch'], '/password', [PasswordController::class, 'update'])->name('password.update');
 
 
-    // Version simplifiée - masque juste l'affichage des notifications
+    //  l'affichage des notifications
     Route::prefix('notifications')->name('notifications.')->middleware('auth')->group(function () {
         Route::post('{id}/mark-as-read', function ($id) {
-            // Version simplifiée : on ne fait rien pour l'instant
-            // La fonctionnalité sera ajoutée plus tard
             return back();
         })->name('mark-as-read');
 
         Route::post('mark-all-as-read', function () {
-            // Version simplifiée : on ne fait rien pour l'instant
             return back();
         })->name('mark-all-as-read');
     });
-    // --- Clients ---
+    // Clients
     Route::prefix('clients')->name('clients.')->group(function () {
         Route::get('/', [ClientController::class, 'index'])->name('index');
         Route::get('/creer', [ClientController::class, 'creer'])->name('creer');
@@ -77,28 +65,28 @@ Route::middleware(['auth'])->group(function () {
             ->middleware('role:administrateur,responsable');
     });
 
-    // --- Dossiers ---
-    Route::prefix('dossiers')->name('dossiers.')->group(function () {
+    //  Dossiers
+    Route::prefix('dossiers')->name('dossiers.')->middleware('role:responsable,agent')->group(function () {
         Route::get('/', [DossierController::class, 'index'])->name('index');
         Route::get('/creer', [DossierController::class, 'create'])->name('creer');        // ← create (pas creer)
         Route::post('/', [DossierController::class, 'store'])->name('enregistrer');       // ← store (pas enregistrer)
         Route::get('/{dossier}', [DossierController::class, 'show'])->name('show');   // ← show (pas afficher)
         Route::get('/{dossier}/modifier', [DossierController::class, 'edit'])->name('modifier');  // ← edit (pas modifier)
-        Route::patch('/{dossier}/statut', [DossierController::class, 'updateStatut'])->name('update-statut');
+        Route::patch('/{dossier}/statut', [DossierController::class, 'updateStatut'])->name('update-statut')->middleware('role:responsable');
         Route::put('/{dossier}', [DossierController::class, 'update'])->name('mettre-a-jour');    // ← update (pas mettreAJour)
         Route::delete('/{dossier}', [DossierController::class, 'destroy'])->name('supprimer');
 
-        // ✅ Affectation d'un agent (nouvelle méthode)
+        //  Affectation d'un agent
         Route::post('/{dossier}/affecter-agent', [DossierController::class, 'affecterAgent'])->name('affecter-agent');
 
-        // ✅ Historique du dossier (optionnel)
+        //Historique du dossier
         Route::get('/{dossier}/historique', [DossierController::class, 'historique'])->name('historique');
 
         Route::get('/dossiers/{dossier}/pdf', [DossierController::class, 'exportPdf'])->name('dossiers.pdf');
     });
 
 
-    // --- Demandes ---
+    //  Demandes
     Route::prefix('demandes')->name('demandes.')->group(function () {
         Route::get('/', [DemandeController::class, 'index'])->name('index');
         Route::get('/create', [DemandeController::class, 'create'])->name('create');
@@ -106,7 +94,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{demande}', [DemandeController::class, 'show'])->name('show');
         Route::delete('/{demande}', [DemandeController::class, 'destroy'])->name('destroy');
     });
-    // ---// --- Documents ---
+    // Documents
     Route::prefix('documents')->name('documents.')->group(function () {
         Route::get('/', [DocumentController::class, 'index'])->name('index');
         Route::post('/', [DocumentController::class, 'store'])->name('store');
@@ -114,15 +102,12 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{document}', [DocumentController::class, 'destroy'])->name('destroy');
     });
 
-    // Le test PasswordUpdateTest envoie une requête PUT sur /password
-    // On utilise la méthode 'update' du PasswordController
-
-    // Routes pour le profil (souvent requises par les tests liés à Auth)
+    // Routes pour le profil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // --- Administration ---
+    //  Administration des utilisateurs (accessible uniquement aux administrateurs)
     Route::prefix('utilisateurs')->name('utilisateurs.')->middleware('role:administrateur')->group(function () {
         Route::get('/', [UtilisateurController::class, 'index'])->name('index');
         Route::get('/creer', [UtilisateurController::class, 'create'])->name('creer');

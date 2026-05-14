@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
 
 class Historique extends Model
 {
@@ -87,13 +89,13 @@ class Historique extends Model
     ): self {
         return self::create([
             'dossier_id' => $dossierId,
-            'utilisateur_id' => auth()->id(),
+            'utilisateur_id' => Auth::id(),
             'action' => $action,
             'details' => $details,
             'ancienne_valeur' => $ancienneValeur,
             'nouvelle_valeur' => $nouvelleValeur,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
+            'ip_address' => Request::ip(),
+            'user_agent' => Request::userAgent(),
         ]);
     }
 }

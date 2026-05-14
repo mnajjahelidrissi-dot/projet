@@ -69,20 +69,19 @@ class UserActivationTest extends TestCase
         // Vérifier que l'agent est maintenant inactif
         $this->assertFalse($agent->actif);
     }*/
-       public function test_admin_peut_desactiver_un_utilisateur(): void
-{
-    $admin = $this->creerAdmin();
-    $agent = $this->creerAgent();
+    public function test_admin_peut_desactiver_un_utilisateur(): void
+    {
+        $admin = $this->creerAdmin();
+        $agent = $this->creerAgent();
 
-    $this->assertTrue($agent->actif);
+        $this->assertTrue($agent->actif);
 
-    // SANS dd() ici
-    $response = $this->actingAs($admin)->post('/utilisateurs/' . $agent->id . '/statut');
+        $response = $this->actingAs($admin)->post('/utilisateurs/' . $agent->id . '/statut');
 
-    $agent->refresh();
+        $agent->refresh();
 
-    $this->assertFalse($agent->actif);
-}
+        $this->assertFalse($agent->actif);
+    }
     public function test_admin_peut_reactiver_un_utilisateur(): void
     {
         $admin = $this->creerAdmin();
@@ -130,7 +129,7 @@ class UserActivationTest extends TestCase
     {
         $admin = $this->creerAdmin();
 
-        // L'admin tente de se désactiver lui-même
+        // L'admin tente de se désactiver lui même
         $response = $this->actingAs($admin)->post('/utilisateurs/' . $admin->id . '/statut');
 
         // Vérifier que l'admin est toujours actif

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Création des Utilisateurs (Admin, Responsable, Agent)
+        // Création des Utilisateurs (Admin, Responsable, Agent)
         DB::table('utilisateurs')->insert([
             [
                 'nom' => 'Saham',

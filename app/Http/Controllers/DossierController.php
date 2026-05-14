@@ -1,5 +1,5 @@
 <?php
-
+//Gestion des dossiers clients (CRUD, affectation à un agent, changement de statut, historique, export Excel/PDF)
 namespace App\Http\Controllers;
 
 use App\Models\Dossier;
