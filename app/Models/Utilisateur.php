@@ -2,38 +2,31 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Sanctum\HasApiTokens;
 
 class Utilisateur extends Authenticatable implements CanResetPasswordContract
 {
-    use HasFactory,Notifiable, CanResetPassword;
+    use HasFactory, Notifiable, CanResetPassword, HasApiTokens;
 
-    // Nom de la table
+    /**
+     * Nom de la table associée au modèle.
+     *
+     * @var string
+     */
     protected $table = 'utilisateurs';
-    protected $primaryKey = 'id';
-    public $incrementing = true;
-    public $timestamps = true;
-    protected $keyType = 'int';
-    // Le champ mot_de_passe remplace 'password' par défaut de Laravel
-    protected $authPasswordName = 'password';
-    public function getKey()
-    {
-        return $this->attributes[$this->getKeyName()];
-    }
 
-    public function getKeyName()
-    {
-        return $this->primaryKey;
-    }
-    public function getAuthIdentifierName()
-    {
-        return 'id';
-    }
-
+    /**
+     * Les attributs qui sont autorisés pour l'assignation de masse.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'nom',
         'prenom',
@@ -42,62 +35,110 @@ class Utilisateur extends Authenticatable implements CanResetPasswordContract
         'role',
         'telephone',
         'actif',
-        'remember_token',
     ];
 
+    /**
+     * Les attributs qui doivent être masqués pour la sérialisation JSON (API).
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    /**
+     * Les attributs qui doivent être typés (castés).
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'actif' => 'boolean',
         'email_verified_at' => 'datetime',
+        'password' => 'hashed', // Hachage automatique sécurisé depuis Laravel 10
     ];
-    // Getter pour le nom complet
-    public function getNomCompletAttribute(): string
+
+    /**
+     * Les attributs personnalisés à inclure automatiquement dans les réponses JSON.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = ['nom_complet'];
+
+                /*
+                |--------------------------------------------------------------------------
+                | Accessors & Mutators (Nouvelle Syntaxe Laravel)
+                |--------------------------------------------------------------------------
+                */
+
+    /**
+     * Génère dynamiquement le nom complet de l'utilisateur.
+     * Accessible côté Front via : user.nom_complet
+     */
+    protected function nomComplet(): Attribute
     {
-        return $this->prenom . ' ' . $this->nom;
+        return Attribute::make(
+            get: fn() => trim("{$this->prenom} {$this->nom}"),
+        );
     }
 
-    // Vérification des rôles
+                /*
+                |--------------------------------------------------------------------------
+                | Logique Métier / Rôles (Utilisés par le Dashboard et les Polices)
+                |--------------------------------------------------------------------------
+                */
+
+    /**
+     * Vérifie si l'utilisateur possède le rôle administrateur.
+     */
     public function estAdministrateur(): bool
     {
         return $this->role === 'administrateur';
     }
 
-    public function estAgent(): bool
-    {
-        return $this->role === 'agent';
-    }
-
+    /**
+     * Vérifie si l'utilisateur possède le rôle responsable.
+     */
     public function estResponsable(): bool
     {
         return $this->role === 'responsable';
     }
 
-    // Relations
-    public function dossiersAffectes()
+    /**
+     * Vérifie si l'utilisateur possède le rôle agent.
+     */
+    public function estAgent(): bool
+    {
+        return $this->role === 'agent';
+    }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Relations Éloquentes (Typées explicitement)
+                |--------------------------------------------------------------------------
+                */
+
+    /**
+     * Dossiers assignés à cet agent pour traitement.
+     */
+    public function dossiersAffectes(): HasMany
     {
         return $this->hasMany(Dossier::class, 'agent_id');
     }
 
-    public function dossiersCreees()
+    /**
+     * Dossiers créés à l'origine par cet utilisateur.
+     */
+    public function dossiersCreees(): HasMany
     {
         return $this->hasMany(Dossier::class, 'cree_par');
     }
-    public function dossiersOuverts() {
-        // Correction : votre table Dossier utilise 'ouvert_par'
-        return $this->hasMany(Dossier::class, 'ouvert_par');
-    }
 
-    // Laravel attend getAuthPassword() pour l'authentification
-    public function getAuthPassword(): string
+    /**
+     * Dossiers ouverts et initialisés par cet utilisateur.
+     */
+    public function dossiersOuverts(): HasMany
     {
-        return $this->password;
-    }
-    public function getEmailForPasswordReset()
-    {
-    return $this->email;
+        return $this->hasMany(Dossier::class, 'ouvert_par');
     }
 }

@@ -217,7 +217,7 @@
                                 class="text-sm bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700">
                                 <i class="bi bi-file-pdf"></i> Exporter PDF
                             </a>
-                            <!-- autres boutons existants -->
+
                         </div>
                         <div class="flex gap-2">
                             <a href="{{ route('documents.download', $doc) }}"

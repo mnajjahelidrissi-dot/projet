@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('historiques', function (Blueprint $table) {
             $table->id();
 
-            // Relation avec le dossier (nullable car certaines actions ne concernent pas un dossier spécifique)
+            // Relation avec le dossier
             $table->foreignId('dossier_id')
                 ->nullable()
                 ->constrained('dossiers')
@@ -26,15 +26,15 @@ return new class extends Migration
                 ->onDelete('cascade');
 
             // Type d'action
-            $table->string('action');  // création, modification, changement_statut, upload_document, suppression, connexion, etc.
+            $table->string('action');
 
             // Description détaillée de l'action
             $table->text('details')->nullable();
 
-            // Ancienne valeur (pour les modifications)
+            // Ancienne valeur
             $table->text('ancienne_valeur')->nullable();
 
-            // Nouvelle valeur (pour les modifications)
+            // Nouvelle valeur
             $table->text('nouvelle_valeur')->nullable();
 
             // Adresse IP de l'utilisateur

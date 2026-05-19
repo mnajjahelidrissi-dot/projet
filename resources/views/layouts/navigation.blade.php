@@ -44,7 +44,6 @@
             <!-- Right Side: Notifications & Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:space-x-3">
 
-                <!-- 📢 NOTIFICATIONS DROPDOWN -->
                 <div class="relative" x-data="{ openNotifications: false }">
                     <button @click="openNotifications = !openNotifications" class="relative p-1.5 rounded-full hover:bg-gray-100 transition-colors">
                         <i class="bi bi-bell text-gray-600 text-xl"></i>

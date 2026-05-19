@@ -15,7 +15,6 @@ class UserActivationTest extends TestCase
     {
         parent::setUp();
 
-        // S'assurer qu'il y a un admin dans la base
         if (Utilisateur::where('role', 'administrateur')->count() === 0) {
             Utilisateur::create([
                 'nom' => 'Admin',
@@ -52,23 +51,6 @@ class UserActivationTest extends TestCase
         ]);
     }
 
-    /*public function test_admin_peut_desactiver_un_utilisateur(): void
-    {
-        $admin = $this->creerAdmin();
-        $agent = $this->creerAgent();
-
-        // Vérifier que l'agent est actif au départ
-        $this->assertTrue($agent->actif);
-
-        // Admin essaie de désactiver l'agent
-        $response = $this->actingAs($admin)->post('/utilisateurs/' . $agent->id . '/statut');
-
-        // Recharger l'agent
-        $agent->refresh();
-
-        // Vérifier que l'agent est maintenant inactif
-        $this->assertFalse($agent->actif);
-    }*/
     public function test_admin_peut_desactiver_un_utilisateur(): void
     {
         $admin = $this->creerAdmin();
@@ -76,17 +58,18 @@ class UserActivationTest extends TestCase
 
         $this->assertTrue($agent->actif);
 
-        $response = $this->actingAs($admin)->post('/utilisateurs/' . $agent->id . '/statut');
+        // Correction de l'URL d'action selon ton fichier de routes : /api/utilisateurs/{id}/toggle-status
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/utilisateurs/' . $agent->id . '/toggle-status');
 
+        $response->assertStatus(200);
         $agent->refresh();
-
         $this->assertFalse($agent->actif);
     }
+
     public function test_admin_peut_reactiver_un_utilisateur(): void
     {
         $admin = $this->creerAdmin();
 
-        // Créer un agent inactif
         $agent = Utilisateur::create([
             'nom'      => 'AGENT',
             'prenom'   => 'Test',
@@ -96,16 +79,12 @@ class UserActivationTest extends TestCase
             'actif'    => false,
         ]);
 
-        // Vérifier que l'agent est inactif au départ
         $this->assertFalse($agent->actif);
 
-        // Admin essaie de réactiver l'agent
-        $response = $this->actingAs($admin)->post('/utilisateurs/' . $agent->id . '/statut');
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/utilisateurs/' . $agent->id . '/toggle-status');
 
-        // Recharger l'agent
+        $response->assertStatus(200);
         $agent->refresh();
-
-        // Vérifier que l'agent est maintenant actif
         $this->assertTrue($agent->actif);
     }
 
@@ -114,13 +93,9 @@ class UserActivationTest extends TestCase
         $agent1 = $this->creerAgent();
         $agent2 = $this->creerAgent();
 
-        // Un agent tente de désactiver un autre agent
-        $response = $this->actingAs($agent1)->post('/utilisateurs/' . $agent2->id . '/statut');
+        $response = $this->actingAs($agent1, 'sanctum')->postJson('/api/utilisateurs/' . $agent2->id . '/toggle-status');
 
-        // Vérifier la redirection (pas d'erreur 500)
-        $this->assertTrue(in_array($response->status(), [302, 403]));
-
-        // Vérifier que l'agent2 est toujours actif
+        $response->assertStatus(403); // L'accès de l'API renvoie un 403 Forbidden propre
         $agent2->refresh();
         $this->assertTrue($agent2->actif);
     }
@@ -129,10 +104,9 @@ class UserActivationTest extends TestCase
     {
         $admin = $this->creerAdmin();
 
-        // L'admin tente de se désactiver lui même
-        $response = $this->actingAs($admin)->post('/utilisateurs/' . $admin->id . '/statut');
+        $response = $this->actingAs($admin, 'sanctum')->postJson('/api/utilisateurs/' . $admin->id . '/toggle-status');
 
-        // Vérifier que l'admin est toujours actif
+        $response->assertStatus(403);
         $admin->refresh();
         $this->assertTrue($admin->actif);
     }
@@ -148,11 +122,12 @@ class UserActivationTest extends TestCase
             'actif'    => false,
         ]);
 
-        $response = $this->post('/login', [
+        $response = $this->postJson('/api/login', [
             'email' => $agent->email,
             'password' => 'Agent123',
         ]);
 
         $this->assertGuest();
+        $response->assertStatus(401);
     }
 }

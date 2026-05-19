@@ -12,7 +12,6 @@ use Illuminate\Support\Str;
  */
 class UtilisateurFactory extends Factory
 {
-    // Correction : Lier explicitement au modèle Utilisateur
     protected $model = Utilisateur::class;
 
     protected static ?string $password;
@@ -33,15 +32,14 @@ class UtilisateurFactory extends Factory
 
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => 'administrateur',
         ]);
     }
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
-
 }

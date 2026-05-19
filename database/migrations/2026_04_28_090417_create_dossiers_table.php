@@ -6,28 +6,29 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-  public function up(): void
-{
-        $table->id();
+    public function up(): void
+    {   //Creation de la table Dossiers
+        Schema::create('dossiers', function (Blueprint $table) {
+            $table->id();
 
-        // Définition simple des colonnes (assurez-vous qu'elles sont NULLABLE)
-        $table->unsignedBigInteger('client_id');
-        $table->unsignedBigInteger('agent_id')->nullable();
-        $table->unsignedBigInteger('ouvert_par')->nullable();
+            // Définition simple des colonnes
+            $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('agent_id')->nullable();
+            $table->unsignedBigInteger('ouvert_par')->nullable();
 
-        $table->string('titre', 200);
-        $table->text('description')->nullable();
-        $table->enum('statut', ['en_attente', 'en_cours', 'valide', 'rejete'])->default('en_attente');
-        $table->timestamps();
-    });
+            $table->string('titre', 200);
+            $table->text('description')->nullable();
+            $table->enum('statut', ['en_attente', 'en_cours', 'valide', 'rejete'])->default('en_attente');
+            $table->timestamps();
+        });
 
-    // 2. On ajoute les clés étrangères dans un deuxième temps
-    Schema::table('dossiers', function (Blueprint $table) {
-        $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-        $table->foreign('agent_id')->references('id')->on('utilisateurs')->onDelete('set null');
-        $table->foreign('ouvert_par')->references('id')->on('utilisateurs')->onDelete('set null');
-    });
-}
+        //  les clés étrangères
+        Schema::table('dossiers', function (Blueprint $table) {
+            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
+            $table->foreign('agent_id')->references('id')->on('utilisateurs')->onDelete('set null');
+            $table->foreign('ouvert_par')->references('id')->on('utilisateurs')->onDelete('set null');
+        });
+    }
     public function down(): void
     {
         Schema::dropIfExists('dossiers');

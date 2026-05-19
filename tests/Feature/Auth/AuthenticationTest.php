@@ -7,21 +7,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
-/**
- * Tests d'authentification adaptés au modèle Utilisateur de Saham Bank.
- *
- * Pourquoi ces tests remplacent les tests Breeze par défaut ?
- * - Le modèle s'appelle Utilisateur (pas User)
- * - Le champ mot de passe s'appelle mot_de_passe (pas password)
- * - La route de connexion s'appelle 'login' (POST /connexion)
- * - La route après connexion est 'tableau-de-bord'
- * - Il n'y a pas de page d'inscription publique (ajout via admin uniquement)
- */
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
-
-    // ── Helpers ────────────────────────────────────────────────
 
     /**
      * Crée un utilisateur de test valide.
@@ -38,20 +26,6 @@ class AuthenticationTest extends TestCase
         ], $surcharges));
     }
 
-    // ── Tests ──────────────────────────────────────────────────
-
-    /**
-     * La page de connexion s'affiche correctement.
-     */
-    public function test_la_page_de_connexion_s_affiche(): void
-    {
-        $response = $this->get('/login');
-
-        $response->assertStatus(200);
-        $response->assertSee('SAHAM BANK');
-        $response->assertSee('Se connecter');
-    }
-
     /**
      * Un utilisateur actif peut se connecter avec ses identifiants corrects.
      */
@@ -59,15 +33,13 @@ class AuthenticationTest extends TestCase
     {
         $utilisateur = $this->creerUtilisateur();
 
-        $response = $this->post('/login', [
+        $response = $this->postJson('/api/login', [
             'email'        => 'test@sahambank.ma',
             'password'     => 'motdepasse123',
         ]);
 
-        // Vérifie la redirection vers le tableau de bord
-        $response->assertRedirect(route('dashboard'));
-
-        // Vérifie que l'utilisateur est bien authentifié
+        $response->assertStatus(200);
+        $response->assertJsonStructure(['success', 'token', 'user']);
         $this->assertAuthenticatedAs($utilisateur);
     }
 
@@ -78,16 +50,14 @@ class AuthenticationTest extends TestCase
     {
         $this->creerUtilisateur();
 
-        $response = $this->post('/login', [
+        $response = $this->postJson('/api/login', [
             'email'        => 'test@sahambank.ma',
             'password'     => 'mauvais_mot_de_passe',
         ]);
 
-        // L'utilisateur reste non connecté
         $this->assertGuest();
-
-        // Un message d'erreur est présent
-        $response->assertSessionHasErrors('email');
+        $response->assertStatus(401); // 401 Unauthorized géré par ton AuthController
+        $response->assertJson(['success' => false]);
     }
 
     /**
@@ -97,13 +67,13 @@ class AuthenticationTest extends TestCase
     {
         $this->creerUtilisateur(['actif' => false]);
 
-        $response = $this->post('/login', [
+        $response = $this->postJson('/api/login', [
             'email'        => 'test@sahambank.ma',
             'password'     => 'motdepasse123',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertStatus(401);
     }
 
     /**
@@ -111,52 +81,48 @@ class AuthenticationTest extends TestCase
      */
     public function test_un_email_inexistant_est_refuse(): void
     {
-        $response = $this->post('/login', [
+        $response = $this->postJson('/api/login', [
             'email'        => 'inconnu@sahambank.ma',
             'password'     => 'motdepasse123',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertStatus(401);
     }
 
     /**
-     * Un utilisateur connecté peut se déconnecter.
+     * Un utilisateur connecté peut se déconcerter via l'API Sanctum.
      */
     public function test_un_utilisateur_peut_se_deconnecter(): void
     {
         $utilisateur = $this->creerUtilisateur();
 
-        // Se connecter d'abord
-        $this->actingAs($utilisateur);
-        $this->assertAuthenticatedAs($utilisateur);
+        // Appel authentifié avec le guard sanctum
+        $response = $this->actingAs($utilisateur, 'sanctum')->postJson('/api/logout');
 
-        // Se déconnecter
-        $response = $this->post('/logout');
-
-        $this->assertGuest();
-        $response->assertRedirect('/login');
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
     }
 
     /**
-     * Un utilisateur non connecté est redirigé vers la connexion.
+     * Un utilisateur non connecté reçoit un refus d'accès API (401).
      */
-    public function test_une_page_protegee_redirige_vers_connexion(): void
+    public function test_une_page_protegee_renvoie_un_statut_non_authentifie(): void
     {
-        $response = $this->get('/dashboard');
-        $response->assertRedirect('/login');
+        $response = $this->getJson('/api/dashboard');
+        $response->assertStatus(401);
     }
 
     /**
-     * Un utilisateur connecté accède au tableau de bord.
+     * Un utilisateur connecté accède aux données du tableau de bord.
      */
     public function test_un_utilisateur_connecte_accede_au_tableau_de_bord(): void
     {
         $utilisateur = $this->creerUtilisateur();
 
-        $response = $this->actingAs($utilisateur)->get('/dashboard');
+        $response = $this->actingAs($utilisateur, 'sanctum')->getJson('/api/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('Bienvenue sur votre tableau de bord');
+        $response->assertJsonStructure(['success', 'stats', 'derniersDossiers']);
     }
 }

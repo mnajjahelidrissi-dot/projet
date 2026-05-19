@@ -23,27 +23,28 @@ class ProfileTest extends TestCase
         ]);
     }
 
-    public function test_profile_page_is_displayed(): void
+    public function test_profile_data_is_displayed(): void
     {
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->get('/profile');
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/profile');
 
         $response->assertStatus(200);
+        $response->assertJsonStructure(['success', 'data' => ['id', 'email', 'nom']]);
     }
 
     public function test_profile_information_can_be_updated(): void
     {
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->patch('/profile', [
+        $response = $this->actingAs($user, 'sanctum')->patchJson('/api/profile', [
             'nom' => 'NOUVEAU_NOM',
             'prenom' => 'NouveauPrenom',
             'email' => 'nouveauprofile@test.ma',
             'telephone' => '0612345678',
         ]);
 
-        $response->assertRedirect();
+        $response->assertStatus(200);
 
         $user->refresh();
         $this->assertSame('NOUVEAU_NOM', $user->nom);
@@ -64,25 +65,26 @@ class ProfileTest extends TestCase
             'actif' => true,
         ]);
 
-        $response = $this->actingAs($user1)->patch('/profile', [
+        $response = $this->actingAs($user1, 'sanctum')->patchJson('/api/profile', [
             'nom' => 'TEST',
             'prenom' => 'Profile',
             'email' => 'autreprofile@test.ma',
             'telephone' => '0612345678',
         ]);
 
-        $response->assertSessionHasErrors('email');
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('email');
     }
 
     public function test_user_can_delete_their_account(): void
     {
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->delete('/profile', [
+        $response = $this->actingAs($user, 'sanctum')->deleteJson('/api/profile', [
             'password' => 'Password123',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertStatus(200);
         $this->assertDatabaseMissing('utilisateurs', ['id' => $user->id]);
     }
 
@@ -90,12 +92,11 @@ class ProfileTest extends TestCase
     {
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->delete('/profile', [
+        $response = $this->actingAs($user, 'sanctum')->deleteJson('/api/profile', [
             'password' => 'MauvaisMotDePasse',
         ]);
 
-        // Vérifie qu'il y a une erreur (sans spécifier le champ exact)
-        $response->assertSessionHasErrors();
+        $response->assertStatus(422);
         $this->assertDatabaseHas('utilisateurs', ['id' => $user->id]);
     }
 }

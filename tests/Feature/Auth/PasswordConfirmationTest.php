@@ -23,30 +23,30 @@ class PasswordConfirmationTest extends TestCase
         ]);
     }
 
-    public function test_confirm_password_screen_can_be_rendered(): void
+    public function test_un_utilisateur_non_connecte_est_refuse_au_tableau_de_bord(): void
     {
-        $response = $this->get('/dashboard');
-        $response->assertRedirect('/login');
+        $response = $this->getJson('/api/dashboard');
+        $response->assertStatus(401);
     }
 
-    public function test_password_can_be_confirmed(): void
+    public function test_un_utilisateur_connecte_recoit_ses_donnees(): void
     {
         $utilisateur = $this->creerUtilisateur();
 
-        $response = $this->actingAs($utilisateur)->get('/dashboard');
+        $response = $this->actingAs($utilisateur, 'sanctum')->getJson('/api/dashboard');
         $response->assertStatus(200);
     }
 
-    public function test_password_is_not_confirmed_with_invalid_password(): void
+    public function test_connexion_echoue_avec_un_mot_de_passe_invalide(): void
     {
         $this->creerUtilisateur();
 
-        $response = $this->post('/login', [
+        $response = $this->postJson('/api/login', [
             'email'    => 'confirm@test.ma',
             'password' => 'mauvais',
         ]);
 
         $this->assertGuest();
-        $response->assertSessionHasErrors('email');
+        $response->assertStatus(401);
     }
 }

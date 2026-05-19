@@ -1,5 +1,5 @@
 <?php
-
+//Pour avoir une notification par email et en base de données lors du changement de statut d'un dossier (en attente, en cours, validé, rejeté)
 namespace App\Notifications;
 
 use App\Models\Dossier;

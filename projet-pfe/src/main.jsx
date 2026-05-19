@@ -6,8 +6,6 @@ import './index.css';  // ou './App.css' selon ton fichier
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
-        <BrowserRouter>
-            <App />
-        </BrowserRouter>
+        <App />
     </StrictMode>
 );

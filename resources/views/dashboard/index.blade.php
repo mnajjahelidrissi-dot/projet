@@ -46,8 +46,7 @@
                 @endif
             </div>
         </div>
-
-        {{-- ── Derniers dossiers ─────────────────────────────────────── --}}
+        <!--Derniers dossiers-->
         <div class="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-5">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold text-gray-700">Derniers dossiers</h3>
@@ -122,7 +121,6 @@
         </div>
     </div>
     @section('content')
-    <!-- Ajoutez cette ligne -->
     <h1 class="text-2xl font-bold text-gray-800 mb-6">Bienvenue sur votre tableau de bord</h1>
 
     {{-- KPIs --}}

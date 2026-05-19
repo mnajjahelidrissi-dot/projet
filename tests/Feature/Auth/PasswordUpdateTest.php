@@ -27,7 +27,7 @@ class PasswordUpdateTest extends TestCase
     {
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->patch('/profile', [
+        $response = $this->actingAs($user, 'sanctum')->patchJson('/api/profile', [
             'nom' => 'TEST',
             'prenom' => 'Password',
             'email' => 'password@test.ma',
@@ -36,15 +36,16 @@ class PasswordUpdateTest extends TestCase
             'password_confirmation' => 'NouveauMotDePasse456',
         ]);
 
-        $response->assertRedirect();
+        $response->assertStatus(200);
         $this->assertTrue(Hash::check('NouveauMotDePasse456', $user->fresh()->password));
     }
 
     public function test_correct_password_must_be_provided_to_update(): void
     {
+        // Note : Ton ProfileUpdateRequest doit être configuré pour valider le current_password
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->patch('/profile', [
+        $response = $this->actingAs($user, 'sanctum')->patchJson('/api/profile', [
             'nom' => 'TEST',
             'prenom' => 'Password',
             'email' => 'password@test.ma',
@@ -53,14 +54,14 @@ class PasswordUpdateTest extends TestCase
             'password_confirmation' => 'NouveauMotDePasse456',
         ]);
 
-        $response->assertSessionHasErrors('current_password');
+        $response->assertStatus(422);
     }
 
     public function test_new_password_must_be_confirmed(): void
     {
         $user = $this->creerUtilisateur();
 
-        $response = $this->actingAs($user)->patch('/profile', [
+        $response = $this->actingAs($user, 'sanctum')->patchJson('/api/profile', [
             'nom' => 'TEST',
             'prenom' => 'Password',
             'email' => 'password@test.ma',
@@ -69,6 +70,7 @@ class PasswordUpdateTest extends TestCase
             'password_confirmation' => 'ConfirmationDifferente',
         ]);
 
-        $response->assertSessionHasErrors('password');
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('password');
     }
 }

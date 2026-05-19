@@ -16,37 +16,44 @@ class DossierTest extends TestCase
     private function creerAgent(): Utilisateur
     {
         return Utilisateur::create([
-            'nom' => 'AGENT', 'prenom' => 'Test',
+            'nom' => 'AGENT',
+            'prenom' => 'Test',
             'email' => 'agent@test.ma',
             'password' => Hash::make('Admin@123'),
-            'role' => 'agent', 'actif' => true,
+            'role' => 'agent',
+            'actif' => true,
         ]);
     }
 
     private function creerResponsable(): Utilisateur
     {
         return Utilisateur::create([
-            'nom' => 'RESP', 'prenom' => 'Test',
+            'nom' => 'RESP',
+            'prenom' => 'Test',
             'email' => 'resp@test.ma',
             'password' => Hash::make('Admin@123'),
-            'role' => 'responsable', 'actif' => true,
+            'role' => 'responsable',
+            'actif' => true,
         ]);
     }
 
     private function creerClient(Utilisateur $agent): Client
     {
         return Client::create([
-            'nom' => 'ALAMI', 'prenom' => 'Karim',
-            'cin' => 'ZZ111111', 'telephone' => '0611111111',
-            'statut' => 'actif', 'cree_par' => $agent->id,
+            'nom' => 'ALAMI',
+            'prenom' => 'Karim',
+            'cin' => 'ZZ111111',
+            'telephone' => '0611111111',
+            'statut' => 'actif',
+            'cree_par' => $agent->id,
         ]);
     }
 
     public function test_la_liste_des_dossiers_s_affiche(): void
     {
-        $response = $this->actingAs($this->creerAgent())->get('/dossiers');
+        $response = $this->actingAs($this->creerAgent(), 'sanctum')->getJson('/api/dossiers');
         $response->assertStatus(200);
-        $response->assertSee('Liste des dossiers');
+        $response->assertJsonStructure(['success', 'data']);
     }
 
     public function test_un_agent_peut_creer_un_dossier(): void
@@ -54,43 +61,48 @@ class DossierTest extends TestCase
         $agent  = $this->creerAgent();
         $client = $this->creerClient($agent);
 
-        $response = $this->actingAs($agent)->post('/dossiers', [
-            'client_id'    => $client->id,
-            'type_demande' => 'ouverture_compte',
-            'description'  => 'Test.',
+        $response = $this->actingAs($agent, 'sanctum')->postJson('/api/dossiers', [
+            'client_id'   => $client->id,
+            'titre'       => 'Ouverture de compte courant', // S'aligne avec la validation de ton contrôleur
+            'description' => 'Test.',
         ]);
 
-        $response->assertStatus(302);
-        $response->assertSessionHas('succes');
+        $response->assertStatus(201);
         $this->assertDatabaseHas('dossiers', ['client_id' => $client->id, 'statut' => 'en_attente']);
-        $this->assertDatabaseHas('historiques', ['action' => 'Dossier créé']);
+        $this->assertDatabaseHas('historiques', ['action' => 'création']); // Doit correspondre à la constante Historique::ACTION_CREATION
     }
 
     public function test_la_creation_echoue_sans_client(): void
     {
-        $response = $this->actingAs($this->creerAgent())->post('/dossiers', [
-            'client_id' => '', 'type_demande' => 'reclamation',
+        $response = $this->actingAs($this->creerAgent(), 'sanctum')->postJson('/api/dossiers', [
+            'client_id' => '',
+            'titre' => 'Titre test',
         ]);
 
-        $response->assertSessionHasErrors('client_id');
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('client_id');
         $this->assertDatabaseCount('dossiers', 0);
     }
 
-    public function test_un_agent_peut_changer_le_statut(): void
+    public function test_un_responsable_peut_changer_le_statut(): void
     {
         $agent  = $this->creerAgent();
+        $responsable = $this->creerResponsable();
         $client = $this->creerClient($agent);
 
         $dossier = Dossier::create([
-            'client_id' => $client->id, 'type_demande' => 'demande_carte',
-            'statut' => 'en_attente', 'cree_par' => $agent->id,
+            'client_id' => $client->id,
+            'titre' => 'Demande de carte',
+            'statut' => 'en_attente',
+            'ouvert_par' => $agent->id,
         ]);
 
-        $response = $this->actingAs($agent)->post('/dossiers/' . $dossier->id . '/statut', [
-            'statut' => 'en_cours', 'commentaire' => 'Pris en charge.',
+        // Seul le responsable a accès à cette route d'après ton fichier api.php
+        $response = $this->actingAs($responsable, 'sanctum')->patchJson('/api/dossiers/' . $dossier->id . '/statut', [
+            'statut' => 'en_cours',
         ]);
 
-        $response->assertSessionHas('succes');
+        $response->assertStatus(200);
         $this->assertDatabaseHas('dossiers', ['id' => $dossier->id, 'statut' => 'en_cours']);
     }
 
@@ -101,15 +113,17 @@ class DossierTest extends TestCase
         $client      = $this->creerClient($agent);
 
         $dossier = Dossier::create([
-            'client_id' => $client->id, 'type_demande' => 'reclamation',
-            'statut' => 'en_attente', 'cree_par' => $agent->id,
+            'client_id' => $client->id,
+            'titre' => 'Réclamation de frais',
+            'statut' => 'en_attente',
+            'ouvert_par' => $agent->id,
         ]);
 
-        $response = $this->actingAs($responsable)->post('/dossiers/' . $dossier->id . '/agent', [
+        $response = $this->actingAs($responsable, 'sanctum')->postJson('/api/dossiers/' . $dossier->id . '/affecter-agent', [
             'agent_id' => $agent->id,
         ]);
 
-        $response->assertSessionHas('succes');
+        $response->assertStatus(200);
         $this->assertDatabaseHas('dossiers', ['id' => $dossier->id, 'agent_id' => $agent->id]);
     }
 
@@ -119,15 +133,17 @@ class DossierTest extends TestCase
         $client = $this->creerClient($agent);
 
         $dossier = Dossier::create([
-            'client_id' => $client->id, 'type_demande' => 'reclamation',
-            'statut' => 'en_attente', 'cree_par' => $agent->id,
+            'client_id' => $client->id,
+            'titre' => 'Réclamation de frais',
+            'statut' => 'en_attente',
+            'ouvert_par' => $agent->id,
         ]);
 
-        $response = $this->actingAs($agent)->post('/dossiers/' . $dossier->id . '/agent', [
+        $response = $this->actingAs($agent, 'sanctum')->postJson('/api/dossiers/' . $dossier->id . '/affecter-agent', [
             'agent_id' => $agent->id,
         ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(403); // Interdit par le contrôleur (rôles admin ou responsable requis)
     }
 
     public function test_le_numero_dossier_est_genere_automatiquement(): void
@@ -136,10 +152,13 @@ class DossierTest extends TestCase
         $client = $this->creerClient($agent);
 
         $dossier = Dossier::create([
-            'client_id' => $client->id, 'type_demande' => 'ouverture_compte',
-            'statut' => 'en_attente', 'cree_par' => $agent->id,
+            'client_id' => $client->id,
+            'titre' => 'Ouverture compte',
+            'statut' => 'en_attente',
+            'ouvert_par' => $agent->id,
         ]);
 
-        $this->assertMatchesRegularExpression('/^DOS-\d{4}-\d{4}$/', $dossier->numero_dossier);
+        // S'aligne sur l'expression régulière de ton modèle corrigé (ex: 2026-DOS-00001)
+        $this->assertMatchesRegularExpression('/^\d{4}-DOS-\d{5}$/', $dossier->numero_dossier);
     }
 }

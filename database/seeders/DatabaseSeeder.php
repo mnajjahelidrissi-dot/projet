@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 2. Création d'un Client
+        //  Création d'un Client
         DB::table('clients')->insert([
             'numero_client' => 'CLI-2026-0001',
             'nom' => 'Alami',
@@ -61,7 +61,7 @@ class DatabaseSeeder extends Seeder
             'updated_at' => now(),
         ]);
 
-        // 3. Création d'un Dossier (lié au client 1)
+        //  Création d'un Dossier (lié au client 1)
         DB::table('dossiers')->insert([
             'client_id' => 1,
             'titre' => 'Dossier de test ',
@@ -70,7 +70,5 @@ class DatabaseSeeder extends Seeder
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-
-        // On ne remplit pas 'demandes' et 'documents' car tes migrations sont vides pour l'instant
     }
 }
