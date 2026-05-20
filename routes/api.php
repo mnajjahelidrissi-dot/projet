@@ -10,7 +10,8 @@ use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\UtilisateurController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\PasswordController;
-use Illuminate\Http\Request;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -28,31 +29,33 @@ Route::post('/login', [AuthController::class, 'login']);
 */
 Route::middleware('auth:sanctum')->group(function () {
     /**
-     * 👤 Gestion du Profil et authentification
+     * Gestion du Profil et authentification
      */
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/password', [PasswordController::class, 'update']);
 
     /**
-     * 👤 Gestion du Profil de l'utilisateur connecté
+     *  Gestion du Profil de l'utilisateur connecté
      */
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::match(['put', 'patch'], '/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
 
     /**
-     * 📊 Tableau de bord (Dashboard)
+     * Dashboard
      */
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard']);
-    Route::get('/dashboard/agent', [DashboardController::class, 'agentDashboard']);
+    Route::get('/dashboard/admin', [DashboardController::class, 'adminDashboard'])
+        ->middleware('role:administrateur,responsable');
+    Route::get('/dashboard/agent', [DashboardController::class, 'agentDashboard'])
+        ->middleware('role:agent');
 
 
     Route::get('/dashboard/export', [DashboardController::class, 'exportStats']);  // ← CORRIGÉ
 
     /**
-     * 👥 Module : Clients
+     *   Clients
      */
     Route::prefix('clients')->group(function () {
         Route::get('/', [ClientController::class, 'index']);
@@ -65,7 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     /**
-     * 📂 Module : Dossiers
+     *  Dossiers
      */
     Route::prefix('dossiers')->group(function () {
         Route::get('/', [DossierController::class, 'index']);
@@ -82,7 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     /**
-     * 📝 Module : Demandes
+     * Demandes
      */
     Route::prefix('demandes')->group(function () {
         Route::get('/', [DemandeController::class, 'index']);
@@ -92,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     /**
-     * 📄 Module : Documents
+     *  Documents
      */
     Route::prefix('documents')->group(function () {
         Route::get('/', [DocumentController::class, 'index']);
@@ -102,7 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     /**
-     * 🔑 Module : Administration Utilisateurs
+     *  Administration Utilisateurs
      */
     Route::prefix('utilisateurs')->middleware('role:administrateur')->group(function () {
         Route::get('/', [UtilisateurController::class, 'index']);

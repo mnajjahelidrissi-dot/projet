@@ -25,8 +25,14 @@ export const AuthProvider = ({ children }) => {
         //recuperer le token d'authentification et les infos de l'utilisateur depuis le localStorage
         const token = localStorage.getItem('auth_token')
         const userData = localStorage.getItem('user')
-        if (token && userData) {
-            setUser(JSON.parse(userData))
+        if (token) {
+            try {
+                const response = await api.get('/user');
+                setUser(response.data.user);
+            } catch (error) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+            }
         }
         setLoading(false)
     }

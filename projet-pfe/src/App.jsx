@@ -7,6 +7,7 @@ import UserList from './components/users/UserList'
 import UserForm from './components/users/UserForm'
 import Layout from './components/common/Layout'
 import { Toaster } from 'react-hot-toast'
+import UserPage from './pages/UserPage'
 
 // Composant pour protéger les routes (non authentifié)
 const PrivateRoute = ({ children }) => {

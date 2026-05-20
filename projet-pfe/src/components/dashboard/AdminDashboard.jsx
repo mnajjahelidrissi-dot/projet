@@ -20,10 +20,11 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const response = await dashboardService.getAdminStats();
-            setStats(response.stats);
-            setRepartition(response.repartition);
-            setRecentDossiers(response.recent_dossiers);
-            setTopAgents(response.top_agents);
+            // Guard against unexpected API shape
+            setStats(response?.stats ?? null);
+            setRepartition(response?.repartition ?? []);
+            setRecentDossiers(response?.recent_dossiers ?? []);
+            setTopAgents(response?.top_agents ?? []);
         } catch (error) {
             console.error('Erreur chargement dashboard', error);
         } finally {

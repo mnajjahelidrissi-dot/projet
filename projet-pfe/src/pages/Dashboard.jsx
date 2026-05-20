@@ -11,6 +11,7 @@ const Dashboard = () => {
         en_cours: 0
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         loadDashboard();
@@ -18,11 +19,28 @@ const Dashboard = () => {
 
     const loadDashboard = async () => {
         setLoading(true);
+        setError(null);
         try {
-            const response = await dashboardService.getAdminStats();
-            setStats(response.stats);
+            let response;
+
+            // Appeler la bonne API selon le rôle
+            if (user?.role === 'administrateur' || user?.role === 'responsable') {
+                response = await dashboardService.getAdminStats();
+                setStats(response.data?.stats || response.stats || {});
+            } else {
+                response = await dashboardService.getAgentStats();
+                // Pour l'agent, adapter les clés
+                const agentStats = response.data?.stats || response.stats || {};
+                setStats({
+                    total_clients: 0,  // L'agent ne voit pas les clients
+                    total_dossiers: agentStats.derniersDossiers || 0,
+                    en_attente: agentStats.mes_en_attente || 0,
+                    en_cours: agentStats.mes_en_cours || 0
+                });
+            }
         } catch (error) {
             console.error('Erreur chargement dashboard:', error);
+            setError('Impossible de charger les données');
         } finally {
             setLoading(false);
         }
@@ -32,6 +50,14 @@ const Dashboard = () => {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-6">
+                {error}
             </div>
         );
     }

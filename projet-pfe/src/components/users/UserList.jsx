@@ -24,11 +24,13 @@ const UserList = () => {
         setLoading(true);
         try {
             const params = {};
+            let usersArray = [];
             if (search) params.search = search;
             if (roleFilter) params.role = roleFilter;
 
             const response = await userService.getAll(params);
-            setUsers(response.data || []);
+            usersArray = Array.isArray(response.data) ? response.data : [];
+            setUsers(usersArray);
             setPagination({
                 current_page: response.current_page || 1,
                 last_page: response.last_page || 1,
