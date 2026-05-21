@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import './stylecommon/Sidebar.css';
+
+
 
 const Sidebar = () => {
     const location = useLocation();
@@ -12,44 +15,43 @@ const Sidebar = () => {
 
     return (
 
-
-        <aside className="w-64 bg-gray-800 text-white flex-shrink-0">
-
-            <nav className="p-4">
+        <aside className="sidebar">
+            <nav className="sidebar-nav">
                 <Link
                     to="/dashboard"
-                    className={`block py-2 px-4 rounded mb-1 ${isActive('/dashboard') ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                    className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
                 >
-                    📊 Tableau de bord
+                    Tableau de bord
                 </Link>
 
                 {(isAdminOrResponsable) && (
                     <Link
                         to="/clients"
-                        className={`block py-2 px-4 rounded mb-1 ${isActive('/clients') ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                        className={`nav-item ${isActive('/clients') ? 'active' : ''}`}
                     >
-                        👥 Clients
+                        Clients
                     </Link>
                 )}
 
                 <Link
                     to="/dossiers"
-                    className={`block py-2 px-4 rounded mb-1 ${isActive('/dossiers') ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                    className={`nav-item ${isActive('/dossiers') ? 'active' : ''}`}
                 >
-                    📁 Dossiers
+                    Dossiers
                 </Link>
 
                 {isAdmin && (
                     <Link
                         to="/utilisateurs"
-                        className={`block py-2 px-4 rounded mt-4 ${isActive('/utilisateurs') ? 'bg-blue-600' : 'hover:bg-gray-700'}`}
+                        className={`nav-item ${isActive('/utilisateurs') ? 'active' : ''}`}
                     >
-                        👤 Utilisateurs
+                        Utilisateurs
                     </Link>
                 )}
             </nav>
         </aside>
     );
 };
+
 
 export default Sidebar;

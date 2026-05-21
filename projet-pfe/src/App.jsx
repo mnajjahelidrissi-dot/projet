@@ -3,11 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Login from './components/auth/Login'
 import Dashboard from './pages/Dashboard'
-import UserList from './components/users/UserList'
-import UserForm from './components/users/UserForm'
+import UserList from './components/users/UserList/UserList'
+import UserForm from './components/users/UserForm/UserForm'
 import Layout from './components/common/Layout'
 import { Toaster } from 'react-hot-toast'
 import UserPage from './pages/UserPage'
+import ForgetPassword from './components/auth/ForgetPassword/ForgetPassword';
+import ResetPassword from './components/auth/ResetPassword/ResetPassword';
 
 // Composant pour protéger les routes (non authentifié)
 const PrivateRoute = ({ children }) => {
@@ -28,7 +30,8 @@ function App() {
                 <Routes>
                     {/* Route publique */}
                     <Route path="/login" element={<Login />} />
-
+                    <Route path="/forgot-password" element={<ForgetPassword />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
                     {/* Routes protégées avec Layout  comme un layouyt parent*/}
                     <Route path="/" element={
                         <PrivateRoute>

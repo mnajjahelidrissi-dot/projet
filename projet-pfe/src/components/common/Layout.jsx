@@ -1,19 +1,15 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
-import Sidebar from './Sidebar';
+import './stylecommon/Layout.css';
 
 const Layout = () => {
     return (
-        <div className="flex flex-col h-screen">
+        <div className="layout">
             <Header />
-            <div className="flex flex-1 overflow-hidden">
-                <Sidebar />
-                <main className="flex-1 overflow-auto bg-gray-100">
-                    {/* Contenu principal de la page */}
-                    <Outlet />
-                </main>
-            </div>
+            <main className="main-content">
+                <Outlet />
+            </main>
         </div>
     );
 };

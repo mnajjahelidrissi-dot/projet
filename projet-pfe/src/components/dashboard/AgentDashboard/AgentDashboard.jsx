@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardService } from '../../services/dashboardService';
-import Loader from '../common/Loader';
+import { dashboardService } from '../../../services/dashboardService';
+import Loader from '../../common/Loader';
 
 const AgentDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -66,8 +66,8 @@ const AgentDashboard = () => {
                                     <td className="px-4 py-2">{dossier.client?.nom_complet}</td>
                                     <td className="px-4 py-2">
                                         <span className={`px-2 py-1 rounded text-xs ${dossier.statut === 'en_cours' ? 'bg-blue-100 text-blue-800' :
-                                                dossier.statut === 'valide' ? 'bg-green-100 text-green-800' :
-                                                    'bg-yellow-100 text-yellow-800'
+                                            dossier.statut === 'valide' ? 'bg-green-100 text-green-800' :
+                                                'bg-yellow-100 text-yellow-800'
                                             }`}>
                                             {dossier.statut_label}
                                         </span>

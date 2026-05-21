@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { userService } from '../../services/userService';
-import { useAuth } from '../../contexts/AuthContext';
+import { userService } from '../../../services/userService';
+import { useAuth } from '../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 const UserList = () => {

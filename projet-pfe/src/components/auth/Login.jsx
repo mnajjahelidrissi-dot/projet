@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import './Login.css'
+import sahamLogo from '../../assets/saham-bank-logo.svg'
 
 const Login = () => {
     const navigate = useNavigate()        // Pour rediriger
@@ -36,49 +38,52 @@ const Login = () => {
     }
     return (
 
-        <div>
-            <div>
-                <h1>SAHAM Bank</h1>
-                <p>Connectez-vous à votre espace</p>
+        <div className="login-container">        {/* ← AJOUTER */}
+            <div className="login-card">          {/* ← AJOUTER */}
+                <div className="login-header">
+                    <img src={sahamLogo} alt="Logo SAHAM Bank" className="login-logo" />
+                    <p>Connectez-vous à votre espace</p>
+                </div>
+
+                {error && (
+                    <div className="error-message">
+                        <span className="error-icon">⚠</span>
+                        <p className="error-text">{error}</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit}>
+                    <div className="input-group">
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="votre@email.com"
+                            required
+                        />
+                    </div>
+
+                    <div className="input-group">
+                        <label>Mot de passe</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
+
+                    <button type="submit" disabled={loading} className="login-button">
+                        {loading ? 'Connexion...' : 'Se connecter'}
+                    </button>
+
+                    <div className="login-footer">
+                        <a href="/forgot-password">Mot de passe oublié ?</a>
+                    </div>
+                </form>
             </div>
-
-            {error && (
-                <div>
-                    {error}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Email</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="votre@email.com"
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label>Mot de passe</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                    />
-                </div>
-
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Connexion...' : 'Se connecter'}
-                </button>
-
-                <div>
-                    <a href="/forgot-password">Mot de passe oublié ?</a>
-                </div>
-            </form>
         </div>
     )
 }

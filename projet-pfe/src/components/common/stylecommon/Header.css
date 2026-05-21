@@ -1,0 +1,160 @@
+/* Header.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.header {
+    background: linear-gradient(135deg, #0a2540 0%, #1a3a5c 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 12px 24px;
+}
+
+.header-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* Logo */
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.logo-link img {
+    height: 45px;
+    width: auto;
+    filter: brightness(0) invert(1);
+}
+
+/* Menu horizontal */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    padding: 8px 16px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 30px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.nav-link.active {
+    background: #3b82a7;
+    color: white;
+}
+
+/* Bouton Déconnexion - toujours à droite */
+.logout-button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.logout-button:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* Version desktop */
+@media (min-width: 769px) {
+    .header-container {
+        flex-wrap: nowrap;
+    }
+
+    .nav-menu {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .logout-button {
+        margin-left: auto;
+    }
+}
+
+/* Version tablette et mobile - bouton reste à droite */
+@media (max-width: 768px) {
+    .header {
+        padding: 10px 16px;
+    }
+
+    .header-container {
+        flex-wrap: wrap;
+    }
+
+    .logo-link {
+        order: 1;
+    }
+
+    .logout-button {
+        order: 2;
+        margin-left: auto;
+        margin-right: 0;
+        padding: 6px 16px;
+        font-size: 12px;
+    }
+
+    .nav-menu {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+/* Version très petit mobile */
+@media (max-width: 480px) {
+    .logo-link img {
+        height: 35px;
+    }
+
+    .logout-button {
+        padding: 5px 12px;
+        font-size: 11px;
+    }
+
+    .nav-link {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+}

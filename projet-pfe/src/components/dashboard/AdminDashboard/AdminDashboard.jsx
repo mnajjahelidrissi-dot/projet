@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardService } from '../../services/dashboardService';
-import StatsCards from './StatsCards';
-import Charts from './Charts';
-import RecentDossiers from './RecentDossiers';
-import TopAgents from './TopAgents';
+import { dashboardService } from '../../../services/dashboardService';
+import StatsCards from '../Statistiques/StatsCards';
+import Charts from '../Statistiques/Charts';
+import RecentDossiers from '../Statistiques/RecentDossiers';
+import TopAgents from '../Statistiques/TopAgents';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);

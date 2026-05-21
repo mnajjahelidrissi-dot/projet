@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { userService } from '../../services/userService';
+import { userService } from '../../../services/userService';
 import toast from 'react-hot-toast';
 
 const UserForm = () => {
